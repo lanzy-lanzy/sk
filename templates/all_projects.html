@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-tertiary mb-8 animate-fade-in">All Projects</h1>
+
+    <!-- Search form -->
+        <form method="GET" action="{% url 'all_projects' %}" class="mb-8">
+            <div class="flex items-center max-w-lg mx-auto">
+                <input type="text" name="search" placeholder="Search projects..." value="{{ request.GET.search }}" class="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                <button type="submit" class="bg-tertiary text-white p-2 rounded-r-lg hover:bg-quaternary transition duration-300">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+        {% if search_query %}
+            <p class="text-gray-600 mb-4">Search results for: "{{ search_query }}"</p>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for project in projects %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in" style="animation-delay: {{ forloop.counter|add:1|stringformat:'d'}}00ms;">
+
+                    <div class="bg-tertiary text-white p-4">
+                        <h2 class="text-xl font-semibold">{{ project.name }}</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">{{ project.description|truncatechars:100 }}</p>
+                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                            <div>
+                                <p class="font-semibold text-tertiary"><i class="fas fa-money-bill-wave mr-2"></i>Budget</p>
+                                <p>₱{{ project.budget|intcomma }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-tertiary"><i class="fas fa-receipt mr-2"></i>Expenses</p>
+                                <p>₱{{ project.total_expenses|intcomma }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-tertiary"><i class="fas fa-calendar-alt mr-2"></i>Start Date</p>
+                                <p>{{ project.start_date }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-tertiary"><i class="fas fa-flag-checkered mr-2"></i>End Date</p>
+                                <p>{{ project.end_date }}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <a href="{% url 'project_detail' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-full hover:bg-quaternary transition duration-300">
+                                <i class="fas fa-eye mr-2"></i>View Details
+                            </a>
+                            <a href="{% url 'project_accomplishment_report' project.id %}" class="bg-primary text-tertiary px-4 py-2 rounded-full hover:bg-secondary transition duration-300">
+                                <i class="fas fa-file-alt mr-2"></i>Accomplishment Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="col-span-3 text-center text-gray-500 text-lg animate-fade-in">No projects found. {% if search_query %}Try a different search term or {% endif %}Start by creating your first project!</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+{% endblock %}

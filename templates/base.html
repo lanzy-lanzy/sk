@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}SK Budget Dashboard{% endblock %}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#F3CA52',
+                            secondary: '#F6E9B2',
+                            tertiary: '#0A6847',
+                            quaternary: '#7ABA78',
+                        }
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body class="bg-secondary">
+        <div class="flex h-screen">
+        <!-- Sidebar -->
+            <aside class="w-64 bg-tertiary text-white flex flex-col">
+                <div class="p-4 flex flex-col items-center">
+                    <a href="{% url 'edit_profile' %}" class="mb-3 relative">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-24 h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
+                        {% else %}
+                            <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-24 h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
+                        {% endif %}
+                        <i class="fas fa-pencil-alt absolute bottom-0 right-0 bg-quaternary text-white p-2 rounded-full"></i>
+                    </a>
+                    <div class="text-center relative">
+                        <h2 class="text-lg font-semibold">{{ user.get_full_name|title }}</h2>
+                        <p class="text-xs text-gray-300">{{ user.address|truncatechars:20|capfirst }}</p>
+                        <a href="{% url 'edit_profile' %}" class="absolute -right-6 top-0">
+                            <i class="fas fa-pencil-alt text-quaternary hover:text-primary transition-colors duration-200"></i>
+                        </a>
+                    </div>
+                </div>
+                <nav class="mt-6 flex-grow">
+
+                    {% if user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-user-shield mr-3 text-xl"></i> <span class="text-lg">Admin Dashboard</span>
+                        </a>
+                    {% else%}
+
+                        <a href="{% url 'dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-home mr-3 text-xl"></i> <span class="text-lg">Dashboard</span>
+                        </a>
+
+
+                        <a href="{% url 'all_projects' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_projects' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-project-diagram mr-3 text-xl"></i> <span class="text-lg">Projects</span>
+                        </a>
+
+
+                        <a href="{% url 'all_expenses' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_expenses' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-receipt mr-3 text-xl"></i> <span class="text-lg">All Expenses</span>
+                        </a>
+
+
+                        <a href="{% url 'export_pdf_report' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'export_pdf_report' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-file-pdf mr-3 text-xl"></i> <span class="text-lg">Export PDF Report</span>
+                        </a>
+                    {% endif %}
+                </nav>
+
+
+                <div class="p-4 mt-auto">
+
+
+                    <a href="{% url 'logout' %}" class="block py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt mr-3 text-xl"></i> <span class="text-lg font-semibold">Logout</span>
+                    </a>
+                </div>
+            </aside>
+        <!-- Main Content -->
+            <main class="flex-1 p-8 overflow-y-auto">
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
+    </body>
+</html>

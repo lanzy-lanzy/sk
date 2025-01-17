@@ -1,0 +1,83 @@
+  <!-- Main Budget Modal -->
+<div id="budgetModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-opacity duration-300 ease-in-out">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+        <div class="mt-3">
+            <h3 class="text-2xl font-bold text-tertiary mb-4"><i class="fas fa-money-bill-wave mr-2"></i>Create Main Budget</h3>
+            <form id="budgetForm" method="post" action="{% url 'create_main_budget' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="year" class="block text-gray-700 text-sm font-bold mb-2"><i class="far fa-calendar-alt mr-2"></i>Year</label>
+                    <input type="number" id="year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year">
+                </div>
+                <div class="mb-6">
+                    <label for="total_budget" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-dollar-sign mr-2"></i>Total Budget</label>
+                    <input type="number" id="total_budget" name="total_budget" step="0.01" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter total budget">
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeModal()" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"><i class="fas fa-times mr-2"></i>Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-tertiary rounded-lg hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary transition-colors duration-200"><i class="fas fa-check mr-2"></i>Create Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Project Creation Modal -->
+<div id="projectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-opacity duration-300 ease-in-out">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+        <div class="mt-3">
+            <h3 class="text-2xl font-bold text-tertiary mb-4"><i class="fas fa-project-diagram mr-2"></i>Create New Project</h3>
+            <form id="projectForm" method="post" action="{% url 'create_project' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-tag mr-2"></i>Project Name</label>
+                    <input type="text" id="name" name="name" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter project name" oninput="this.value=this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
+                    <textarea id="description" name="description" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" rows="3" placeholder="Enter project description" oninput="this.value=this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="budget" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-dollar-sign mr-2"></i>Budget</label>
+                    <input type="number" id="budget" name="budget" step="0.01" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter budget">
+                </div>
+                <div class="mb-4">
+                    <label for="start_date" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-calendar-plus mr-2"></i>Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200">
+                </div>
+                <div class="mb-6">
+                    <label for="end_date" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-calendar-check mr-2"></i>End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200">
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeProjectModal()" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"><i class="fas fa-times mr-2"></i>Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-tertiary rounded-lg hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary transition-colors duration-200"><i class="fas fa-check mr-2"></i>Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New Year Budget Modal -->
+<div id="newYearBudgetModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-opacity duration-300 ease-in-out">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+        <div class="mt-3">
+            <h3 class="text-2xl font-bold text-tertiary mb-4"><i class="fas fa-calendar-alt mr-2"></i>Create New Year Budget</h3>
+            <form id="newYearBudgetForm" method="post" action="{% url 'create_new_year_budget' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="new_year" class="block text-gray-700 text-sm font-bold mb-2"><i class="far fa-calendar-alt mr-2"></i>Year</label>
+                    <input type="number" id="new_year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year">
+                </div>
+                <div class="mb-6">
+                    <label for="new_total_budget" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-dollar-sign mr-2"></i>Total Budget</label>
+                    <input type="number" id="new_total_budget" name="total_budget" step="0.01" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter total budget">
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeNewYearBudgetModal()" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"><i class="fas fa-times mr-2"></i>Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-tertiary rounded-lg hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary transition-colors duration-200"><i class="fas fa-check mr-2"></i>Create New Year Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

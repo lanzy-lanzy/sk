@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-tertiary mb-8">All Project Expenses</h1>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-tertiary mb-4">Total Expenses Across All Projects</h2>
+            <p class="text-4xl font-bold text-quaternary">₱{{ total_expenses|floatformat:2|intcomma }}</p>
+        </div>
+
+        <form method="get" class="mb-8">
+            <div class="flex items-center">
+                <input type="text" name="search" placeholder="Search projects or expenses..." value="{{ search_query }}" class="flex-grow p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded-r-lg hover:bg-tertiary-dark focus:outline-none focus:ring-2 focus:ring-tertiary">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        {% for project in projects %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8 transition-all duration-300 hover:shadow-xl">
+                <div class="bg-tertiary text-white p-4">
+                    <h2 class="text-2xl font-semibold">{{ project.name }}</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-primary rounded-lg p-4 transition-all duration-300 hover:shadow-md">
+                            <p class="font-semibold text-tertiary">Budget</p>
+                            <p class="text-2xl font-bold">₱{{ project.budget|floatformat:2|intcomma }}</p>
+                        </div>
+                        <div class="bg-secondary rounded-lg p-4 transition-all duration-300 hover:shadow-md">
+                            <p class="font-semibold text-tertiary">Total Expenses</p>
+                            <p class="text-2xl font-bold">₱{{ project.total_expenses|floatformat:2|intcomma }}</p>
+                        </div>
+                        <div class="bg-quaternary rounded-lg p-4 transition-all duration-300 hover:shadow-md">
+                            <p class="font-semibold text-white">Remaining Budget</p>
+                            <p class="text-2xl font-bold text-white">₱{{ project.remaining_budget|floatformat:2|intcomma }}</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mb-4">Expense Details</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-3 px-4 text-left">Date</th>
+                                    <th class="py-3 px-4 text-left">Item</th>
+                                    <th class="py-3 px-4 text-left">Quantity</th>
+                                    <th class="py-3 px-4 text-left">Price per Unit</th>
+                                    <th class="py-3 px-4 text-left">Description</th>
+                                    <th class="py-3 px-4 text-left">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in project.expenses.all %}
+                                    <tr class="{% cycle 'bg-gray-50' 'bg-white' %} hover:bg-gray-100 transition-colors duration-200">
+                                        <td class="py-3 px-4">{{ expense.date_incurred }}</td>
+                                        <td class="py-3 px-4">{{ expense.item_name }}</td>
+                                        <td class="py-3 px-4">{{ expense.quantity }}</td>
+                                        <td class="py-3 px-4">₱{{ expense.price_per_unit|floatformat:2|intcomma }}</td>
+                                        <td class="py-3 px-4">{{ expense.description }}</td>
+                                        <td class="py-3 px-4">₱{{ expense.amount|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="py-3 px-4 text-center text-gray-500">No expenses recorded for this project.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-center text-gray-500 text-lg">No projects found. Start by creating your first project!</p>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+            <div class="bg-tertiary text-white p-6">
+                <h1 class="text-3xl font-bold">Add Accomplishment Report</h1>
+                <p class="mt-2 text-sm opacity-80">{{ project.name }}</p>
+            </div>
+            <div class="p-6">
+                <form method="post" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    <div>
+                        <label for="{{ form.report_date.id_for_label }}" class="block text-sm font-medium text-gray-700">Report Date</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400"></i>
+                            </div>
+                            {{ form.report_date|add_class:"pl-10 block w-full border-gray-300 rounded-md focus:ring-tertiary focus:border-tertiary" }}
+                        </div>
+                    </div>
+                    <div>
+                        <label for="{{ form.report_details.id_for_label }}" class="block text-sm font-medium text-gray-700">Report Details</label>
+                        <div class="mt-1">
+                            {{ form.report_details|add_class:"shadow-sm focus:ring-tertiary focus:border-tertiary block w-full sm:text-sm border-gray-300 rounded-md" }}
+                        </div>
+                    </div>
+                    <div>
+                        <label for="{{ image_form.images.id_for_label }}" class="block text-sm font-medium text-gray-700">Upload Images</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="{{ image_form.images.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-tertiary hover:text-quaternary focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-tertiary">
+                                        <span>Upload files</span>
+                                        {{ image_form.images }}
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+                            </div>
+                        </div>
+                        <div id="image-preview" class="mt-4 hidden">
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="preview-grid"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-tertiary hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary">
+                            <i class="fas fa-save mr-2"></i>Submit Report
+                        </button>
+                        <a href="{% url 'project_accomplishment_report' project.id %}" class="text-sm font-medium text-tertiary hover:text-quaternary">
+                            <i class="fas fa-arrow-left mr-1"></i>Back to Reports
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('{{ image_form.images.id_for_label }}').onchange = function(e) {
+            const previewContainer = document.getElementById('image-preview');
+            const previewGrid = document.getElementById('preview-grid');
+            const files = e.target.files;
+            
+            // Clear previous previews
+            previewGrid.innerHTML = '';
+            
+            if (files.length > 0) {
+                previewContainer.classList.remove('hidden');
+                
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    const previewDiv = document.createElement('div');
+                    const previewImg = document.createElement('img');
+                    
+                    previewDiv.className = 'relative aspect-square';
+                    previewImg.className = 'w-full h-full object-cover rounded-lg shadow-lg';
+                    
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewDiv.appendChild(previewImg);
+                        previewGrid.appendChild(previewDiv);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        };
+    </script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <div class="container mx-auto mt-8 max-w-md animate__animated animate__fadeIn">
+        <h2 class="text-3xl font-bold mb-6 text-center text-tertiary animate__animated animate__slideInDown">
+            <i class="fas fa-edit mr-2"></i>Edit Project
+        </h2>
+        <form method="post" class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 animate__animated animate__zoomIn">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-6 animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter|add:"-1" }}00ms;">
+                    <label class="block text-tertiary text-sm font-bold mb-2" for="{{ field.id_for_label }}">
+                        {% if field.name == 'title' %}
+                            <i class="fas fa-heading mr-2"></i>
+                        {% elif field.name == 'description' %}
+                            <i class="fas fa-align-left mr-2"></i>
+                        {% elif field.name == 'start_date' %}
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                        {% elif field.name == 'end_date' %}
+                            <i class="fas fa-calendar-check mr-2"></i>
+                        {% elif field.name == 'status' %}
+                            <i class="fas fa-tasks mr-2"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle mr-2"></i>
+                        {% endif %}
+                        {{ field.label }}
+                    </label>
+                    {{ field|add_class:"shadow-sm appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-tertiary focus:border-transparent transition duration-300" }}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-red-500 text-xs italic mt-1 animate__animated animate__shakeX">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="flex items-center justify-between mt-8 animate__animated animate__fadeInUp" style="animation-delay: 500ms;">
+                <button type="submit" class="bg-tertiary hover:bg-quaternary text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 transform hover:scale-105 animate__animated animate__pulse animate__infinite">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'all_projects' %}" class="inline-block align-baseline font-bold text-sm text-tertiary hover:text-quaternary transition duration-300 animate__animated animate__bounceIn" style="animation-delay: 700ms;">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Projects
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

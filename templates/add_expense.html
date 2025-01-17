@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+    <div class="container mx-auto mt-8 max-w-xl">
+        <div class="bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-primary">
+            <div class="bg-tertiary text-white py-6 px-8">
+                <h2 class="text-3xl font-bold flex items-center">
+                    <i class="fas fa-plus-circle mr-3 text-primary"></i>Add Expense
+                </h2>
+                <p class="text-sm opacity-75 mt-2">{{ project.name|capfirst }}</p>
+            </div>
+            <form method="post" class="p-8 space-y-6">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-4">
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ field.label|capfirst }}
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-{% if field.name == 'item_name' %}tag{% elif field.name == 'quantity' %}hashtag{% elif field.name == 'description' %}file-alt{% elif field.name == 'price_per_unit' %}dollar-sign{% elif field.name == 'amount' %}money-bill-wave{% else %}calendar-alt{% endif %} text-gray-400"></i>
+                            </div>
+                            {% if field.name == 'item_name' or field.name == 'description' %}
+                                <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary" oninput="capitalizeWords(this)" value="{{ field.value|default:'' }}">
+                            {% elif field.name == 'price_per_unit' or field.name == 'quantity' %}
+                                <input type="number" name="{{ field.name }}" id="{{ field.id_for_label }}" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary" oninput="calculateTotal()" value="{{ field.value|default:'' }}">
+                            {% elif field.name == 'amount' %}
+                                <input type="number" name="{{ field.name }}" id="{{ field.id_for_label }}" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary" readonly value="{{ field.value|default:'' }}">
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                        </div>
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ error|capfirst }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <div class="flex justify-between items-center mt-8">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-tertiary hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary">
+                        <i class="fas fa-save mr-2"></i>Save Expense
+                    </button>
+                    <a href="{% url 'project_detail' project.id %}" class="text-sm font-medium text-tertiary hover:text-quaternary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back To Project
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function capitalizeWords(input) {
+            input.value = input.value.replace(/\b\w/g, function(l){ return l.toUpperCase() })
+        }
+
+        function calculateTotal() {
+            var price = parseFloat(document.getElementById('id_price_per_unit').value) || 0;
+            var quantity = parseInt(document.getElementById('id_quantity').value) || 0;
+            var total = price * quantity;
+            document.getElementById('id_amount').value = total.toFixed(2);
+        }
+    </script>
+{% endblock %}

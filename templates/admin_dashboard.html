@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6 text-tertiary">
+        <i class="fas fa-tachometer-alt mr-2"></i>Admin Dashboard
+    </h1>
+
+<!-- Add search form -->
+    <form method="get" class="mb-6">
+        <div class="flex">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search chairmen or projects..." class="flex-grow p-2 border rounded-l-lg">
+            <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded-r-lg hover:bg-quaternary transition duration-300">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+        </div>
+    </form>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-chart-pie mr-2"></i>Overall Budget Summary</h2>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-tertiary">
+            <p class="flex items-center mb-2"><i class="fas fa-money-bill-wave text-quaternary mr-2"></i>Total Budget: <span class="ml-2 font-semibold">₱{{ total_budget|intcomma }}</span></p>
+            <p class="flex items-center mb-2"><i class="fas fa-receipt text-quaternary mr-2"></i>Total Expenses: <span class="ml-2 font-semibold">₱{{ total_expenses|intcomma }}</span></p>
+            <p class="flex items-center"><i class="fas fa-piggy-bank text-quaternary mr-2"></i>Remaining Budget: <span class="ml-2 font-semibold">₱{{ total_budget|sub:total_expenses|intcomma }}</span></p>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-list-alt mr-2"></i>All Main Budgets</h2>
+        <div class="mb-4">
+            <input type="text" id="budgetSearch" placeholder="Search budgets..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+        </div>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table id="mainBudgetsTable" class="min-w-full">
+                <thead class="bg-tertiary text-white">
+                    <tr>
+                        <th class="py-3 px-4 border-b"><i class="far fa-calendar-alt mr-2"></i>Year</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-user-tie mr-2"></i>Chairman</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-map-marker-alt mr-2"></i>Address</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-money-bill-alt mr-2"></i>Total Budget</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-chart-bar mr-2"></i>Allocated Budget</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-coins mr-2"></i>Remaining Budget</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for budget in all_main_budgets %}
+                        <tr class="hover:bg-secondary">
+                            <td class="py-3 px-4 border-b">{{ budget.year }}</td>
+                            <td class="py-3 px-4 border-b">{{ budget.chairman.get_full_name|title }}</td>
+                            <td class="py-3 px-4 border-b">{{ budget.chairman.address|default:"N/A" }}</td>
+                            <td class="py-3 px-4 border-b">₱{{ budget.total_budget|intcomma }}</td>
+                            <td class="py-3 px-4 border-b">₱{{ budget.allocated_budget|intcomma }}</td>
+                            <td class="py-3 px-4 border-b">₱{{ budget.remaining_budget|intcomma }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-100 font-semibold">
+                    <tr>
+                        <td class="py-3 px-4 border-t" colspan="3">Totals:</td>
+                        <td class="py-3 px-4 border-t" id="totalBudgetSum">₱0</td>
+                        <td class="py-3 px-4 border-t" id="allocatedBudgetSum">₱0</td>
+                        <td class="py-3 px-4 border-t" id="remainingBudgetSum">₱0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-project-diagram mr-2"></i>All Projects</h2>
+        <div class="mb-4">
+            <input type="text" id="projectSearch" placeholder="Search projects..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+        </div>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table id="projectsTable" class="min-w-full">
+                <thead class="bg-tertiary text-white">
+                    <tr>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-folder mr-2"></i>Name</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-user-tie mr-2"></i>Chairman</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-money-bill-alt mr-2"></i>Budget</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-calendar-plus mr-2"></i>Start Date</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-calendar-check mr-2"></i>End Date</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-info-circle mr-2"></i>Status</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-chart-line mr-2"></i>Progress</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-cogs mr-2"></i>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in all_projects %}
+                        <tr class="hover:bg-secondary">
+                            <td class="py-3 px-4 border-b">{{ project.name|title }}</td>
+                            <td class="py-3 px-4 border-b">{{ project.chairman.get_full_name|title }}</td>
+                            <td class="py-3 px-4 border-b">₱{{ project.allocated_budget|intcomma }}</td>
+                            <td class="py-3 px-4 border-b">{{ project.start_date|date:"M d, Y" }}</td>
+                            <td class="py-3 px-4 border-b">{{ project.end_date|date:"M d, Y" }}</td>
+                            <td class="py-3 px-4 border-b">
+                                {% now "Y-m-d" as current_date %}
+                                {% if project.end_date|date:"Y-m-d" < current_date %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-check-circle mr-1"></i>Completed
+                                    </span>
+                                {% elif project.start_date|date:"Y-m-d" <= current_date and project.end_date|date:"Y-m-d" >= current_date %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-spinner mr-1 fa-spin"></i>In Progress
+                                    </span>
+                                {% elif project.start_date|date:"Y-m-d" > current_date %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-clock mr-1"></i>Not Started
+                                    </span>
+                                {% endif %}
+
+                                {% if project.end_date|date:"Y-m-d" < current_date %}
+                                    <div class="mt-1">
+                                        <span class="text-xs text-gray-500">
+                                            Ended {{ project.end_date|timesince }} ago
+                                        </span>
+                                    </div>
+                                {% elif project.start_date|date:"Y-m-d" <= current_date and project.end_date|date:"Y-m-d" >= current_date %}
+                                    <div class="mt-1">
+                                        <span class="text-xs text-gray-500">
+                                            {{ project.end_date|timeuntil }} remaining
+                                        </span>
+                                    </div>
+                                {% elif project.start_date|date:"Y-m-d" > current_date %}
+                                    <div class="mt-1">
+                                        <span class="text-xs text-gray-500">
+                                            Starts in {{ project.start_date|timeuntil }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 border-b">
+                                {% with total_expenses=project.expenses.all|sum_expenses %}
+                                    <div class="flex flex-col space-y-2">
+                                        <!-- Budget Status -->
+                                        {% if total_expenses >= project.allocated_budget %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <i class="fas fa-exclamation-circle mr-1"></i>Budget Exceeded
+                                            </span>
+                                        {% elif total_expenses >= project.allocated_budget|multiply:0.8 %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>Near Budget Limit
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <i class="fas fa-check mr-1"></i>Within Budget
+                                            </span>
+                                        {% endif %}
+                                        
+                                        <!-- Progress Bar -->
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="h-2 rounded-full {% if total_expenses >= project.allocated_budget %}bg-red-500{% elif total_expenses >= project.allocated_budget|multiply:0.8 %}bg-yellow-500{% else %}bg-green-500{% endif %}"
+                                                 style="width: {{ total_expenses|percentage:project.allocated_budget }}%">
+                                            </div>
+                                        </div>
+                                        <span class="text-xs text-gray-600">{{ total_expenses|percentage:project.allocated_budget }}% used</span>
+                                    </div>
+                                {% endwith %}
+                            </td>
+                            <td class="py-3 px-4 border-b">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'project_detail' project.id %}" 
+                                       class="inline-flex items-center px-3 py-1 bg-tertiary text-white rounded hover:bg-quaternary transition duration-300 text-sm">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        View Details
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-100 font-semibold">
+                    <tr>
+                        <td class="py-3 px-4 border-t" colspan="2">Totals:</td>
+                        <td class="py-3 px-4 border-t" id="totalProjectBudget">₱0</td>
+                        <td class="py-3 px-4 border-t" colspan="5"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for chairman in chairmen %}
+            <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-tertiary">
+                <h2 class="text-xl font-semibold mb-4 text-tertiary"><i class="fas fa-user-circle mr-2"></i>{{ chairman.get_full_name|title }}</h2>
+                <p class="flex items-center mb-2"><i class="fas fa-envelope text-quaternary mr-2"></i>{{ chairman.email }}</p>
+                <p class="flex items-center mb-2"><i class="fas fa-folder-open text-primary mr-2"></i>Total Projects: {{ chairman.projects.count }}</p>
+                <p class="flex items-center mb-2"><i class="fas fa-money-bill-wave text-quaternary mr-2"></i>Total Budget: ₱{{ chairman.total_budget|floatformat:2|intcomma }}</p>
+                <p class="flex items-center mb-2"><i class="fas fa-receipt text-quaternary mr-2"></i>Total Expenses: ₱{{ chairman.total_expenses|floatformat:2|intcomma }}</p>
+                <div class="mt-4">
+                    <h3 class="font-semibold text-tertiary"><i class="fas fa-list-ul mr-2"></i>Projects:</h3>
+                    <ul class="list-disc pl-5 mt-2">
+                        {% for project in chairman.projects.all %}
+                            <li class="mb-1">{{ project.name|title }} - ₱{{ project.budget|floatformat:2|intcomma }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% empty %}
+            <p class="col-span-full text-center text-gray-500">No chairmen found matching your search criteria.</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Main Budgets search functionality
+            const searchInput = document.getElementById('budgetSearch');
+            const budgetTableRows = document.querySelector('#mainBudgetsTable tbody').querySelectorAll('tr');
+            
+            function updateBudgetTotals(visibleRows) {
+                let totalBudget = 0;
+                let allocatedBudget = 0;
+                let remainingBudget = 0;
+
+                visibleRows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        totalBudget += parseFloat(row.children[3].textContent.replace('₱', '').replace(/,/g, ''));
+                        allocatedBudget += parseFloat(row.children[4].textContent.replace('₱', '').replace(/,/g, ''));
+                        remainingBudget += parseFloat(row.children[5].textContent.replace('₱', '').replace(/,/g, ''));
+                    }
+                });
+
+                document.getElementById('totalBudgetSum').textContent = '₱' + totalBudget.toLocaleString();
+                document.getElementById('allocatedBudgetSum').textContent = '₱' + allocatedBudget.toLocaleString();
+                document.getElementById('remainingBudgetSum').textContent = '₱' + remainingBudget.toLocaleString();
+            }
+
+            function searchBudgetTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                budgetTableRows.forEach(row => {
+                    const text = Array.from(row.children)
+                        .map(cell => cell.textContent.toLowerCase())
+                        .join(' ');
+                    
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                updateBudgetTotals(budgetTableRows);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', searchBudgetTable);
+                updateBudgetTotals(budgetTableRows);
+            }
+
+            // Projects search functionality
+            const projectSearchInput = document.getElementById('projectSearch');
+            const projectTableRows = document.querySelector('#projectsTable tbody').querySelectorAll('tr');
+            
+            function updateProjectTotals(visibleRows) {
+                let totalBudget = 0;
+
+                visibleRows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const budgetText = row.children[2].textContent;
+                        totalBudget += parseFloat(budgetText.replace('₱', '').replace(/,/g, ''));
+                    }
+                });
+
+                document.getElementById('totalProjectBudget').textContent = '₱' + totalBudget.toLocaleString();
+            }
+
+            function searchProjects() {
+                const searchTerm = projectSearchInput.value.toLowerCase();
+                
+                projectTableRows.forEach(row => {
+                    const searchableColumns = [
+                        row.children[0].textContent, // Name
+                        row.children[1].textContent, // Chairman
+                        row.children[2].textContent, // Budget
+                        row.children[3].textContent, // Start Date
+                        row.children[4].textContent, // End Date
+                        row.children[5].textContent.replace(/\s+/g, ' ').trim(), // Status
+                    ];
+                    
+                    const text = searchableColumns.join(' ').toLowerCase();
+                    
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                updateProjectTotals(projectTableRows);
+            }
+
+            if (projectSearchInput) {
+                projectSearchInput.addEventListener('input', searchProjects);
+                updateProjectTotals(projectTableRows);
+            }
+        });
+    </script>
+{% endblock %}

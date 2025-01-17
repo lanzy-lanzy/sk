@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register - SK Budget</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#F3CA52',
+                            secondary: '#F6E9B2',
+                            tertiary: '#0A6847',
+                            quaternary: '#7ABA78',
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            @keyframes float {
+                0% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-20px) rotate(10deg); }
+                100% { transform: translateY(0px) rotate(0deg); }
+            }
+            .coin {
+                position: absolute;
+                opacity: 0.5;
+                animation: float 3s ease-in-out infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            .pulse {
+                animation: pulse 2s infinite;
+            }
+            @keyframes slideIn {
+                from { transform: translateY(-50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .slide-in {
+                animation: slideIn 0.5s ease-out;
+            }
+        </style>
+    </head>
+    <body class="bg-gradient-to-br from-secondary via-primary to-quaternary min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="coin" style="top: 10%; left: 10%;">
+            <i class="fas fa-coins text-6xl text-yellow-500"></i>
+        </div>
+        <div class="coin" style="top: 20%; right: 15%;">
+            <i class="fas fa-dollar-sign text-5xl text-green-500"></i>
+        </div>
+        <div class="coin" style="bottom: 15%; left: 20%;">
+            <i class="fas fa-piggy-bank text-7xl text-pink-500"></i>
+        </div>
+        <div class="coin" style="bottom: 25%; right: 10%;">
+            <i class="fas fa-chart-line text-6xl text-blue-500"></i>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-tertiary relative z-10 transform hover:scale-105 transition-all duration-300 slide-in">
+            <h2 class="text-3xl font-bold text-tertiary mb-6 text-center pulse"><i class="fas fa-user-plus mr-2"></i>Register</h2>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div class="relative group">
+                    <i class="fas fa-user absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
+                    <input type="text" name="{{ form.username.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Username">
+                </div>
+                <div class="relative group">
+                    <i class="fas fa-envelope absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
+                    <input type="email" name="{{ form.email.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Email">
+                </div>
+                <div class="relative group">
+                    <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
+                    <input type="password" name="{{ form.password1.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Password">
+                </div>
+                <div class="relative group">
+                    <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
+                    <input type="password" name="{{ form.password2.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Confirm Password">
+                </div>
+                <button type="submit" class="w-full bg-tertiary text-white px-4 py-2 rounded-full hover:bg-quaternary transition duration-300 flex items-center justify-center transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-opacity-50">
+                    <i class="fas fa-user-plus mr-2"></i>Register
+                </button>
+            </form>
+            <p class="mt-6 text-center text-gray-600">
+                Already have an account? <a href="{% url 'login' %}" class="text-tertiary hover:text-quaternary font-semibold transition-colors duration-300">Login</a>
+            </p>
+        </div>
+    </body>
+</html>

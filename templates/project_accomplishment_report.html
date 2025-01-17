@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-tertiary mb-8">Project Accomplishment Report</h1>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="bg-tertiary text-white p-6">
+                <h2 class="text-2xl font-semibold">{{ project.name }}</h2>
+                <p class="text-sm mt-2">{{ project.description }}</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-primary rounded-lg p-4">
+                        <p class="font-semibold text-tertiary"><i class="fas fa-money-bill-wave mr-2"></i>Budget</p>
+                        <p class="text-2xl font-bold">₱{{ project.budget|floatformat:2|intcomma }}</p>
+                    </div>
+                    <div class="bg-secondary rounded-lg p-4">
+                        <p class="font-semibold text-tertiary"><i class="fas fa-receipt mr-2"></i>Total Expenses</p>
+                        <p class="text-2xl font-bold">₱{{ project.total_expenses|floatformat:2|intcomma }}</p>
+                    </div>
+                    <div class="bg-quaternary rounded-lg p-4">
+                        <p class="font-semibold text-white"><i class="fas fa-piggy-bank mr-2"></i>Remaining Budget</p>
+                        <p class="text-2xl font-bold text-white">₱{{ project.remaining_budget|floatformat:2|intcomma }}</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2"><i class="fas fa-calendar-alt mr-2"></i>Project Timeline</h3>
+                    <p><strong>Start Date:</strong> {{ project.start_date }}</p>
+                    <p><strong>End Date:</strong> {{ project.end_date }}</p>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4"><i class="fas fa-clipboard-list mr-2"></i>Accomplishment Reports</h3>
+                {% for report in accomplishment_reports %}
+                    <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                        <h4 class="text-lg font-semibold mb-2"><i class="fas fa-file-alt mr-2"></i>Report Date: {{ report.report_date }}</h4>
+                        <p class="mb-4">{{ report.report_details|linebreaks }}</p>
+                        {% if report.report_images.all %}
+                            <div class="mt-4">
+                                <h5 class="text-md font-semibold mb-2"><i class="fas fa-images mr-2"></i>Attached Images:</h5>
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {% for img in report.report_images.all %}
+                                        <div class="relative group">
+                                            <div class="aspect-square cursor-pointer" onclick="openLightbox('{{ img.image.url }}', '{{ img.caption|default:'' }}')">
+                                                <img src="{{ img.image.url }}" alt="{{ img.caption|default:'Accomplishment Report Image' }}" 
+                                                     class="rounded-lg w-full h-full object-cover shadow-lg transition duration-300 group-hover:opacity-90">
+                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-300 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 text-xl"></i>
+                                                </div>
+                                            </div>
+                                            {% if img.caption %}
+                                                <p class="mt-1 text-sm text-gray-600 text-center">{{ img.caption }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="text-gray-500">No accomplishment reports have been submitted for this project yet.</p>
+                {% endfor %}
+
+                <div class="flex justify-between items-center mt-4">
+                    <a href="{% url 'add_accomplishment_report' project.id %}" class="inline-block bg-tertiary text-white px-4 py-2 rounded hover:bg-quaternary transition duration-300">
+                        <i class="fas fa-plus mr-2"></i>Add New Accomplishment Report
+                    </a>
+                    <a href="{% url 'all_projects' %}" class="inline-block bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition duration-300">
+                        <i class="fas fa-arrow-left mr-2"></i>Return to Projects
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 flex flex-col items-center justify-center" onclick="closeLightbox()">
+        <button class="absolute top-4 right-4 text-white text-2xl" onclick="closeLightbox()">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="lightbox-image" src="" alt="Full size image" class="max-h-[80vh] max-w-[90vw] object-contain">
+        <p id="lightbox-caption" class="text-white mt-4 text-center max-w-2xl"></p>
+    </div>
+
+    <script>
+        function openLightbox(imageUrl, caption) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightboxCaption = document.getElementById('lightbox-caption');
+            
+            lightboxImage.src = imageUrl;
+            lightboxCaption.textContent = caption;
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Prevent the click event from bubbling up
+            event.stopPropagation();
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
+{% endblock %}

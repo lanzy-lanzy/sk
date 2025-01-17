@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard - SK Budget{% endblock %}
+
+{% block content %}
+{% load static %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-3xl font-bold text-tertiary mb-6">Welcome to SK Budget Dashboard</h2>
+        {% if messages %}
+            <div id="messages-container" class="mb-8">
+                {% for message in messages %}
+                    <div class="message {% if message.tags == 'success' %}bg-green-100 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %} border-l-4 p-4 mb-4 rounded-r" role="alert">
+                        <p class="font-bold">{{ message.tags|title }}</p>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Cards Section -->
+             {% include "cards_section.html" %}
+             
+
+        </div>
+      <!-- Projects Section -->
+        <div class="mt-12">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-3xl font-bold text-tertiary">Projects</h3>
+                <button onclick="openProjectModal()" class="bg-tertiary text-white px-6 py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg flex items-center">
+                    <i class="fas fa-plus mr-2"></i>Add New Project
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for project in projects %}
+                    <div class="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 {% if project.budget_utilized %}border-2 border-red-500{% endif %}">
+                        <div class="bg-gradient-to-r from-tertiary to-quaternary text-white p-6">
+                            <h4 class="text-2xl font-semibold">{{ project.name }}</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-sm text-gray-600 mb-6">{{ project.description|truncatechars:100 }}</p>
+                            <div class="grid grid-cols-3 gap-4 text-sm mb-6">
+                                <div class="bg-gray-100 p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-money-bill-wave mr-2"></i>Budget</p>
+                                    <p class="text-lg">₱{{ project.allocated_budget|intcomma }}</p>
+                                </div>
+                                <div class="bg-gray-100 p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-receipt mr-2"></i>Expenses</p>
+                                    <p class="text-lg">₱{{ project.total_expenses|intcomma }}</p>
+                                </div>
+                                <div class="bg-gray-100 p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-piggy-bank mr-2"></i>Remaining</p>
+                                    <p class="text-lg">₱{{ project.remaining_budget|intcomma }}</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-sm mb-6">
+                                <div>
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-calendar-alt mr-2"></i>Start Date</p>
+                                    <p>{{ project.start_date }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-flag-checkered mr-2"></i>End Date</p>
+                                    <p>{{ project.end_date }}</p>
+                                </div>
+                            </div>
+
+                            {% if project.budget_utilized %}
+                                <div class="mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert">
+                                    <p class="font-bold">Budget Fully Utilized!</p>
+                                    <p>This project has used up its allocated budget. Consider increasing the budget or reviewing expenses.</p>
+                                </div>
+                            {% endif %}
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <a href="{% url 'add_expense' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
+                                    <i class="fas fa-plus-circle mr-2"></i>Add Expense
+                                </a>
+                                <a href="{% url 'project_detail' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
+                                    <i class="fas fa-eye mr-2"></i>View Details
+                                </a>
+                                <a href="{% url 'edit_project' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
+                                    <i class="fas fa-edit mr-2"></i>Edit Project
+                                </a>
+                                <button onclick="confirmDelete({{ project.id }})" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 flex items-center justify-center text-sm font-medium">
+                                    <i class="fas fa-trash-alt mr-2"></i>Delete Project
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-span-3 text-center py-12 bg-gray-100 rounded-xl">
+                        <i class="fas fa-project-diagram text-6xl text-gray-400 mb-4"></i>
+                        <p class="text-2xl text-gray-500 mb-4">No projects yet.</p>
+                        <p class="text-lg text-tertiary">Create your first project to get started!</p>
+                        <button onclick="openProjectModal()" class="mt-6 bg-tertiary text-white px-6 py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>Add New Project
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% include 'add_budget_modal.html' %}
+<script>
+function openModal() {
+    const modal = document.getElementById('budgetModal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.querySelector('div > div').classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeModal() {
+    const modal = document.getElementById('budgetModal');
+    modal.querySelector('div > div').classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function openProjectModal() {
+    const modal = document.getElementById('projectModal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.querySelector('div > div').classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeProjectModal() {
+    const modal = document.getElementById('projectModal');
+    modal.querySelector('div > div').classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function openNewYearBudgetModal() {
+    const modal = document.getElementById('newYearBudgetModal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.querySelector('div > div').classList.remove('scale-95', 'opacity-0');
+    }, 10);
+}
+
+function closeNewYearBudgetModal() {
+    const modal = document.getElementById('newYearBudgetModal');
+    modal.querySelector('div > div').classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modals = [
+        document.getElementById('budgetModal'),
+        document.getElementById('projectModal'),
+        document.getElementById('newYearBudgetModal')
+    ];
+
+    modals.forEach(modal => {
+        if (event.target == modal) {
+            modal.querySelector('div > div').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    });
+};
+
+function confirmDelete(projectId) {
+    if (confirm('Are you sure you want to delete this project?')) {
+        window.location.href = `/delete-project/${projectId}/`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var messages = document.querySelectorAll('.message');
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            message.style.transition = 'opacity 1s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 1000);
+        }, 3500);
+    });
+
+    const bar = document.getElementById('budget-usage-bar');
+    const percentage = document.getElementById('usage-percentage');
+    const targetPercentage = {{ usage_percentage|floatformat:2 }};
+    let currentPercentage = 0;
+
+    function updateBar() {
+        if (currentPercentage < targetPercentage) {
+            currentPercentage += 1;
+            bar.style.width = currentPercentage + '%';
+            percentage.textContent = currentPercentage.toFixed(2);
+
+            // Set color based on percentage
+            if (currentPercentage <= 33) {
+                bar.style.backgroundColor = 'green';
+            } else if (currentPercentage <= 66) {
+                bar.style.backgroundColor = 'yellow';
+            } else {
+                bar.style.backgroundColor = 'red';
+            }
+
+            requestAnimationFrame(updateBar);
+        }
+    }
+
+    updateBar();
+});
+</script>
+{% endblock %}
