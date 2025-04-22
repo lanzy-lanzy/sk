@@ -102,27 +102,43 @@
         </div>
         <div class="bg-white bg-opacity-90 p-6 sm:p-10 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md border-t-4 border-tertiary relative z-10 transform hover:scale-105 transition-all duration-300 slide-in">
             <h2 class="text-4xl font-bold text-tertiary mb-8 text-center pulse"><i class="fas fa-user-circle mr-2 text-green-500"></i>Login</h2>
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6" id="loginForm" novalidate>
                 {% csrf_token %}
-                {% if form.errors %}
+                {% if form.non_field_errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline">{{ form.non_field_errors|join:", " }}</span>
+                </div>
+                {% elif form.errors %}
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                     <strong class="font-bold">Error!</strong>
                     <span class="block sm:inline">Please check your username and password.</span>
                 </div>
                 {% endif %}
                 <div class="relative group">
-                    <i class="fas fa-envelope absolute top-3 left-3 text-green-500 group-hover:text-tertiary transition-colors duration-300 z-10"></i>
-                    <input type="text" name="{{ form.username.name }}" class="w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-white" placeholder="Username" required>
+                    <i class="fas fa-user absolute top-3 left-3 text-green-500 group-hover:text-tertiary transition-colors duration-300 z-10"></i>
+                    <input type="text" name="{{ form.username.name }}" id="id_{{ form.username.name }}" class="w-full pl-10 pr-3 py-3 rounded-lg border-2 {% if form.username.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-white" placeholder="Username" required>
                     {% if form.username.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.username.errors|join:", " }}</p>
+                    <p class="text-red-500 text-xs mt-1">{{ form.username.errors|join:", " }}</p>
                     {% endif %}
+                    <p class="text-red-500 text-xs mt-1 username-error hidden">Please enter your username</p>
                 </div>
                 <div class="relative group">
                     <i class="fas fa-lock absolute top-3 left-3 text-green-500 group-hover:text-tertiary transition-colors duration-300 z-10"></i>
-                    <input type="password" name="{{ form.password.name }}" class="w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-white" placeholder="Password" required>
+                    <input type="password" name="{{ form.password.name }}" id="id_{{ form.password.name }}" class="w-full pl-10 pr-3 py-3 rounded-lg border-2 {% if form.password.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-white" placeholder="Password" required>
                     {% if form.password.errors %}
-                    <p class="text-red-500 text-sm mt-1">{{ form.password.errors|join:", " }}</p>
+                    <p class="text-red-500 text-xs mt-1">{{ form.password.errors|join:", " }}</p>
                     {% endif %}
+                    <p class="text-red-500 text-xs mt-1 password-error hidden">Please enter your password</p>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember-me" name="remember-me" class="h-4 w-4 text-tertiary focus:ring-quaternary border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-600">Remember me</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="text-tertiary hover:text-quaternary font-semibold">Forgot password?</a>
+                    </div>
                 </div>
                 <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <strong class="font-bold">Error! </strong>
@@ -140,8 +156,56 @@
         </div>
         <script>
             $(document).ready(function() {
-                $('form').on('submit', function(e) {
+                // Input validation
+                $('#id_{{ form.username.name }}').on('input', function() {
+                    if ($(this).val().trim()) {
+                        $(this).removeClass('border-red-500').addClass('border-gray-300');
+                        $('.username-error').addClass('hidden');
+                    }
+                });
+
+                $('#id_{{ form.password.name }}').on('input', function() {
+                    if ($(this).val()) {
+                        $(this).removeClass('border-red-500').addClass('border-gray-300');
+                        $('.password-error').addClass('hidden');
+                    }
+                });
+
+                // Form submission with validation
+                $('#loginForm').on('submit', function(e) {
                     e.preventDefault();
+
+                    // Basic validation
+                    let isValid = true;
+                    const username = $('#id_{{ form.username.name }}').val().trim();
+                    const password = $('#id_{{ form.password.name }}').val();
+
+                    // Username validation
+                    if (!username) {
+                        $('#id_{{ form.username.name }}').removeClass('border-gray-300').addClass('border-red-500');
+                        $('.username-error').removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        $('#id_{{ form.username.name }}').removeClass('border-red-500').addClass('border-gray-300');
+                        $('.username-error').addClass('hidden');
+                    }
+
+                    // Password validation
+                    if (!password) {
+                        $('#id_{{ form.password.name }}').removeClass('border-gray-300').addClass('border-red-500');
+                        $('.password-error').removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        $('#id_{{ form.password.name }}').removeClass('border-red-500').addClass('border-gray-300');
+                        $('.password-error').addClass('hidden');
+                    }
+
+                    if (!isValid) {
+                        $('#error-message').removeClass('hidden');
+                        $('#error-message .message-text').text('Please fix the errors in the form.');
+                        return;
+                    }
+
                     var $button = $('#loginButton');
                     var $spinner = $('.spinner');
                     var $icon = $button.find('i');
@@ -157,17 +221,34 @@
                     $icon.hide();
                     $text.text('Logging in...');
 
+                    // Add CSRF token to headers
+                    const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
                     $.ajax({
                         type: 'POST',
                         url: '{% url "login" %}',
                         data: $(this).serialize(),
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
                         success: function(response) {
                             if (response.success) {
-                                window.location.href = response.redirect_url;
+                                // Show success message before redirecting
+                                $errorDiv.removeClass('hidden bg-red-100 border-red-400 text-red-700')
+                                    .addClass('bg-green-100 border-green-400 text-green-700');
+                                $errorDiv.find('strong').text('Success! ');
+                                $errorDiv.find('.message-text').text('Login successful. Redirecting...');
+
+                                // Redirect after a short delay
+                                setTimeout(function() {
+                                    window.location.href = response.redirect_url || '/dashboard/';
+                                }, 1000);
                             } else {
                                 // Show error message
-                                $errorDiv.removeClass('hidden');
-                                $errorDiv.find('.message-text').text(response.error);
+                                $errorDiv.removeClass('hidden bg-green-100 border-green-400 text-green-700')
+                                    .addClass('bg-red-100 border-red-400 text-red-700');
+                                $errorDiv.find('strong').text('Error! ');
+                                $errorDiv.find('.message-text').text(response.error || 'Invalid username or password.');
 
                                 // Reset button state
                                 $button.prop('disabled', false);
@@ -183,10 +264,22 @@
                                 }
                             }
                         },
-                        error: function() {
+                        error: function(xhr, status, error) {
                             // Show generic error message
                             $errorDiv.removeClass('hidden');
-                            $errorDiv.find('.message-text').text('An error occurred. Please try again.');
+
+                            // Try to parse the error response
+                            let errorMessage = 'An error occurred. Please try again.';
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.error) {
+                                    errorMessage = response.error;
+                                }
+                            } catch (e) {
+                                // Use default error message
+                            }
+
+                            $errorDiv.find('.message-text').text(errorMessage);
 
                             // Reset button state
                             $button.prop('disabled', false);
@@ -196,7 +289,26 @@
                         }
                     });
                 });
+
+                // Add shake animation to form on error
+                function shakeForm() {
+                    const $form = $('#loginForm');
+                    $form.addClass('animate-shake');
+                    setTimeout(function() {
+                        $form.removeClass('animate-shake');
+                    }, 500);
+                }
             });
         </script>
+        <style>
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+            .animate-shake {
+                animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            }
+        </style>
     </body>
 </html>

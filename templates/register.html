@@ -63,31 +63,277 @@
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md border-t-4 border-tertiary relative z-10 transform hover:scale-105 transition-all duration-300 slide-in">
             <h2 class="text-3xl font-bold text-tertiary mb-6 text-center pulse"><i class="fas fa-user-plus mr-2"></i>Register</h2>
             <p class="text-center text-gray-600 mb-4">After registration, your account will need admin approval before you can log in.</p>
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6" id="registerForm" novalidate>
                 {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline">{{ form.non_field_errors|join:", " }}</span>
+                </div>
+                {% endif %}
                 <div class="relative group">
                     <i class="fas fa-user absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="text" name="{{ form.username.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Username">
+                    <input type="text" name="{{ form.username.name }}" id="id_{{ form.username.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.username.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Username" required>
+                    {% if form.username.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.username.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1 username-requirements hidden">Username must be 3-20 characters long and can contain letters, numbers, and underscores.</p>
                 </div>
                 <div class="relative group">
                     <i class="fas fa-envelope absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="email" name="{{ form.email.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Email">
+                    <input type="email" name="{{ form.email.name }}" id="id_{{ form.email.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.email.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Email" required>
+                    {% if form.email.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.email.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1 email-requirements hidden">Please enter a valid email address.</p>
                 </div>
                 <div class="relative group">
                     <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="password" name="{{ form.password1.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Password">
+                    <input type="password" name="{{ form.password1.name }}" id="id_{{ form.password1.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.password1.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Password" required>
+                    {% if form.password1.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.password1.errors|join:", " }}</p>
+                    {% endif %}
+                    <div class="password-strength mt-1 hidden">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-xs">Password strength:</span>
+                            <span class="text-xs font-semibold password-strength-text">Weak</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div class="bg-red-500 h-1.5 rounded-full password-strength-bar" style="width: 10%"></div>
+                        </div>
+                        <ul class="text-xs text-gray-500 mt-1 space-y-1 password-requirements">
+                            <li class="req-length"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least 8 characters</li>
+                            <li class="req-uppercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one uppercase letter</li>
+                            <li class="req-lowercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one lowercase letter</li>
+                            <li class="req-number"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one number</li>
+                            <li class="req-special"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one special character</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="relative group">
                     <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="password" name="{{ form.password2.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Confirm Password">
+                    <input type="password" name="{{ form.password2.name }}" id="id_{{ form.password2.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.password2.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Confirm Password" required>
+                    {% if form.password2.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.password2.errors|join:", " }}</p>
+                    {% endif %}
+                    <p class="text-red-500 text-xs mt-1 password-match-error hidden">Passwords do not match</p>
                 </div>
-                <button type="submit" class="w-full bg-tertiary text-white px-4 py-2 rounded-full hover:bg-quaternary transition duration-300 flex items-center justify-center transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-opacity-50">
-                    <i class="fas fa-user-plus mr-2"></i>Register
+                <div id="register-error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Error! </strong>
+                    <span class="block sm:inline message-text"></span>
+                </div>
+                <button type="submit" id="registerButton" class="w-full bg-tertiary text-white px-4 py-2 rounded-full hover:bg-quaternary transition duration-300 flex items-center justify-center transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-opacity-50">
+                    <span class="spinner hidden inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                    <i class="fas fa-user-plus mr-2"></i>
+                    <span class="button-text">Register</span>
                 </button>
             </form>
             <p class="mt-6 text-center text-gray-600">
                 Already have an account? <a href="{% url 'login' %}" class="text-tertiary hover:text-quaternary font-semibold transition-colors duration-300">Login</a>
             </p>
         </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Show password requirements on focus
+                $('#id_{{ form.password1.name }}').on('focus', function() {
+                    $('.password-strength').removeClass('hidden');
+                });
+
+                // Show username requirements on focus
+                $('#id_{{ form.username.name }}').on('focus', function() {
+                    $('.username-requirements').removeClass('hidden');
+                });
+
+                // Show email requirements on focus
+                $('#id_{{ form.email.name }}').on('focus', function() {
+                    $('.email-requirements').removeClass('hidden');
+                });
+
+                // Password strength checker
+                $('#id_{{ form.password1.name }}').on('input', function() {
+                    const password = $(this).val();
+                    let strength = 0;
+                    let color = 'red';
+                    let text = 'Weak';
+                    let width = '20%';
+
+                    // Check requirements
+                    const hasLength = password.length >= 8;
+                    const hasUppercase = /[A-Z]/.test(password);
+                    const hasLowercase = /[a-z]/.test(password);
+                    const hasNumber = /[0-9]/.test(password);
+                    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+                    // Update requirement indicators
+                    updateRequirement('length', hasLength);
+                    updateRequirement('uppercase', hasUppercase);
+                    updateRequirement('lowercase', hasLowercase);
+                    updateRequirement('number', hasNumber);
+                    updateRequirement('special', hasSpecial);
+
+                    // Calculate strength
+                    if (hasLength) strength += 1;
+                    if (hasUppercase) strength += 1;
+                    if (hasLowercase) strength += 1;
+                    if (hasNumber) strength += 1;
+                    if (hasSpecial) strength += 1;
+
+                    // Set strength indicator
+                    if (strength === 0) {
+                        color = 'red';
+                        text = 'Very Weak';
+                        width = '10%';
+                    } else if (strength === 1) {
+                        color = 'red';
+                        text = 'Weak';
+                        width = '20%';
+                    } else if (strength === 2) {
+                        color = 'orange';
+                        text = 'Fair';
+                        width = '40%';
+                    } else if (strength === 3) {
+                        color = 'yellow';
+                        text = 'Good';
+                        width = '60%';
+                    } else if (strength === 4) {
+                        color = 'lime';
+                        text = 'Strong';
+                        width = '80%';
+                    } else {
+                        color = 'green';
+                        text = 'Very Strong';
+                        width = '100%';
+                    }
+
+                    $('.password-strength-bar').css('width', width).css('background-color', color);
+                    $('.password-strength-text').text(text).css('color', color);
+
+                    // Check if passwords match
+                    checkPasswordsMatch();
+                });
+
+                // Check if passwords match
+                $('#id_{{ form.password2.name }}').on('input', function() {
+                    checkPasswordsMatch();
+                });
+
+                function checkPasswordsMatch() {
+                    const password1 = $('#id_{{ form.password1.name }}').val();
+                    const password2 = $('#id_{{ form.password2.name }}').val();
+
+                    if (password2 && password1 !== password2) {
+                        $('.password-match-error').removeClass('hidden');
+                        $('#id_{{ form.password2.name }}').addClass('border-red-500').removeClass('border-gray-300');
+                    } else {
+                        $('.password-match-error').addClass('hidden');
+                        if (!$('#id_{{ form.password2.name }}').hasClass('border-red-500')) {
+                            $('#id_{{ form.password2.name }}').removeClass('border-red-500').addClass('border-gray-300');
+                        }
+                    }
+                }
+
+                function updateRequirement(req, isValid) {
+                    const $req = $('.req-' + req);
+                    if (isValid) {
+                        $req.find('i').removeClass('fa-times-circle text-red-500').addClass('fa-check-circle text-green-500');
+                    } else {
+                        $req.find('i').removeClass('fa-check-circle text-green-500').addClass('fa-times-circle text-red-500');
+                    }
+                }
+
+                // Form submission with validation
+                $('#registerForm').on('submit', function(e) {
+                    e.preventDefault();
+
+                    // Basic validation
+                    let isValid = true;
+                    const username = $('#id_{{ form.username.name }}').val();
+                    const email = $('#id_{{ form.email.name }}').val();
+                    const password1 = $('#id_{{ form.password1.name }}').val();
+                    const password2 = $('#id_{{ form.password2.name }}').val();
+
+                    // Username validation
+                    if (!username) {
+                        $('#id_{{ form.username.name }}').addClass('border-red-500');
+                        isValid = false;
+                    }
+
+                    // Email validation
+                    if (!email || !isValidEmail(email)) {
+                        $('#id_{{ form.email.name }}').addClass('border-red-500');
+                        isValid = false;
+                    }
+
+                    // Password validation
+                    if (!password1 || password1.length < 8) {
+                        $('#id_{{ form.password1.name }}').addClass('border-red-500');
+                        isValid = false;
+                    }
+
+                    // Confirm password validation
+                    if (!password2 || password1 !== password2) {
+                        $('#id_{{ form.password2.name }}').addClass('border-red-500');
+                        $('.password-match-error').removeClass('hidden');
+                        isValid = false;
+                    }
+
+                    if (!isValid) {
+                        $('#register-error-message').removeClass('hidden');
+                        $('#register-error-message .message-text').text('Please fix the errors in the form.');
+                        return;
+                    }
+
+                    // Show loading state
+                    const $button = $('#registerButton');
+                    const $spinner = $button.find('.spinner');
+                    const $icon = $button.find('i');
+                    const $text = $button.find('.button-text');
+
+                    $button.prop('disabled', true);
+                    $spinner.removeClass('hidden');
+                    $icon.addClass('hidden');
+                    $text.text('Registering...');
+
+                    // Submit the form
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "register" %}',
+                        data: $(this).serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                window.location.href = response.redirect_url;
+                            } else {
+                                // Show error message
+                                $('#register-error-message').removeClass('hidden');
+                                $('#register-error-message .message-text').text(response.error || 'Registration failed. Please try again.');
+
+                                // Reset button state
+                                $button.prop('disabled', false);
+                                $spinner.addClass('hidden');
+                                $icon.removeClass('hidden');
+                                $text.text('Register');
+                            }
+                        },
+                        error: function() {
+                            // Show generic error message
+                            $('#register-error-message').removeClass('hidden');
+                            $('#register-error-message .message-text').text('An error occurred. Please try again.');
+
+                            // Reset button state
+                            $button.prop('disabled', false);
+                            $spinner.addClass('hidden');
+                            $icon.removeClass('hidden');
+                            $text.text('Register');
+                        }
+                    });
+                });
+
+                function isValidEmail(email) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(email);
+                }
+            });
+        </script>
     </body>
 </html>
