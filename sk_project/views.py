@@ -140,6 +140,28 @@ def user_login(request):
 def approval_pending(request):
     return render(request, 'approval_pending.html')
 
+def check_username_email(request):
+    """Check if a username or email already exists in the database"""
+    username = request.GET.get('username', None)
+    email = request.GET.get('email', None)
+    response_data = {'is_taken': False}
+
+    if username:
+        exists = User.objects.filter(username__iexact=username).exists()
+        if exists:
+            response_data['is_taken'] = True
+            response_data['field'] = 'username'
+            response_data['error_message'] = 'This username is already taken.'
+
+    if email and not response_data['is_taken']:
+        exists = User.objects.filter(email__iexact=email).exists()
+        if exists:
+            response_data['is_taken'] = True
+            response_data['field'] = 'email'
+            response_data['error_message'] = 'This email is already registered.'
+
+    return JsonResponse(response_data)
+
 def user_logout(request):
     logout(request)
     return redirect('landing_page')

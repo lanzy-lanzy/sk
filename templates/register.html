@@ -145,10 +145,80 @@
                     $('.username-requirements').removeClass('hidden');
                 });
 
+                // Check username availability on blur
+                $('#id_{{ form.username.name }}').on('blur', function() {
+                    const username = $(this).val().trim();
+                    if (username.length > 0) {
+                        checkUsernameAvailability(username);
+                    }
+                });
+
                 // Show email requirements on focus
                 $('#id_{{ form.email.name }}').on('focus', function() {
                     $('.email-requirements').removeClass('hidden');
                 });
+
+                // Check email availability on blur
+                $('#id_{{ form.email.name }}').on('blur', function() {
+                    const email = $(this).val().trim();
+                    if (email.length > 0 && isValidEmail(email)) {
+                        checkEmailAvailability(email);
+                    }
+                });
+
+                // Function to check username availability
+                function checkUsernameAvailability(username) {
+                    $.ajax({
+                        url: '{% url "check_username_email" %}',
+                        data: {
+                            'username': username
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.is_taken && data.field === 'username') {
+                                $('#id_{{ form.username.name }}').addClass('border-red-500').removeClass('border-gray-300');
+                                // Check if error message element exists, if not create it
+                                let $errorMsg = $('#username-error-message');
+                                if ($errorMsg.length === 0) {
+                                    $errorMsg = $('<p id="username-error-message" class="text-red-500 text-xs mt-1">' + data.error_message + '</p>');
+                                    $('#id_{{ form.username.name }}').parent().append($errorMsg);
+                                } else {
+                                    $errorMsg.text(data.error_message).removeClass('hidden');
+                                }
+                            } else {
+                                $('#id_{{ form.username.name }}').removeClass('border-red-500').addClass('border-gray-300');
+                                $('#username-error-message').addClass('hidden');
+                            }
+                        }
+                    });
+                }
+
+                // Function to check email availability
+                function checkEmailAvailability(email) {
+                    $.ajax({
+                        url: '{% url "check_username_email" %}',
+                        data: {
+                            'email': email
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            if (data.is_taken && data.field === 'email') {
+                                $('#id_{{ form.email.name }}').addClass('border-red-500').removeClass('border-gray-300');
+                                // Check if error message element exists, if not create it
+                                let $errorMsg = $('#email-error-message');
+                                if ($errorMsg.length === 0) {
+                                    $errorMsg = $('<p id="email-error-message" class="text-red-500 text-xs mt-1">' + data.error_message + '</p>');
+                                    $('#id_{{ form.email.name }}').parent().append($errorMsg);
+                                } else {
+                                    $errorMsg.text(data.error_message).removeClass('hidden');
+                                }
+                            } else {
+                                $('#id_{{ form.email.name }}').removeClass('border-red-500').addClass('border-gray-300');
+                                $('#email-error-message').addClass('hidden');
+                            }
+                        }
+                    });
+                }
 
                 // Password strength checker
                 $('#id_{{ form.password1.name }}').on('input', function() {
@@ -248,8 +318,8 @@
 
                     // Basic validation
                     let isValid = true;
-                    const username = $('#id_{{ form.username.name }}').val();
-                    const email = $('#id_{{ form.email.name }}').val();
+                    const username = $('#id_{{ form.username.name }}').val().trim();
+                    const email = $('#id_{{ form.email.name }}').val().trim();
                     const password1 = $('#id_{{ form.password1.name }}').val();
                     const password2 = $('#id_{{ form.password2.name }}').val();
 
@@ -257,11 +327,36 @@
                     if (!username) {
                         $('#id_{{ form.username.name }}').addClass('border-red-500');
                         isValid = false;
+                    } else if ($('#username-error-message').length > 0 && !$('#username-error-message').hasClass('hidden')) {
+                        // Username is taken
+                        isValid = false;
                     }
 
                     // Email validation
                     if (!email || !isValidEmail(email)) {
                         $('#id_{{ form.email.name }}').addClass('border-red-500');
+                        if (!email) {
+                            // Create or update error message
+                            let $errorMsg = $('#email-error-message');
+                            if ($errorMsg.length === 0) {
+                                $errorMsg = $('<p id="email-error-message" class="text-red-500 text-xs mt-1">Please enter your email address.</p>');
+                                $('#id_{{ form.email.name }}').parent().append($errorMsg);
+                            } else {
+                                $errorMsg.text('Please enter your email address.').removeClass('hidden');
+                            }
+                        } else {
+                            // Create or update error message for invalid email
+                            let $errorMsg = $('#email-error-message');
+                            if ($errorMsg.length === 0) {
+                                $errorMsg = $('<p id="email-error-message" class="text-red-500 text-xs mt-1">Please enter a valid email address.</p>');
+                                $('#id_{{ form.email.name }}').parent().append($errorMsg);
+                            } else {
+                                $errorMsg.text('Please enter a valid email address.').removeClass('hidden');
+                            }
+                        }
+                        isValid = false;
+                    } else if ($('#email-error-message').length > 0 && !$('#email-error-message').hasClass('hidden')) {
+                        // Email is taken
                         isValid = false;
                     }
 
@@ -279,61 +374,129 @@
                     }
 
                     if (!isValid) {
-                        $('#register-error-message').removeClass('hidden');
+                        $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
+                            .addClass('bg-red-100 border-red-400 text-red-700');
+                        $('#register-error-message strong').text('Error! ');
                         $('#register-error-message .message-text').text('Please fix the errors in the form.');
                         return;
                     }
 
-                    // Show loading state
-                    const $button = $('#registerButton');
-                    const $spinner = $button.find('.spinner');
-                    const $icon = $button.find('i');
-                    const $text = $button.find('.button-text');
+                    // Check username and email availability before submitting
+                    $.when(
+                        $.ajax({
+                            url: '{% url "check_username_email" %}',
+                            data: { 'username': username },
+                            dataType: 'json'
+                        }),
+                        $.ajax({
+                            url: '{% url "check_username_email" %}',
+                            data: { 'email': email },
+                            dataType: 'json'
+                        })
+                    ).done(function(usernameResponse, emailResponse) {
+                        const usernameData = usernameResponse[0];
+                        const emailData = emailResponse[0];
 
-                    $button.prop('disabled', true);
-                    $spinner.removeClass('hidden');
-                    $icon.addClass('hidden');
-                    $text.text('Registering...');
-
-                    // Get CSRF token
-                    const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
-
-                    // Submit the form via AJAX
-                    $.ajax({
-                        type: 'POST',
-                        url: '{% url "register" %}',
-                        data: $(this).serialize(),
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': csrftoken
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Show success message
-                                $('#register-error-message').removeClass('hidden bg-red-100 border-red-400 text-red-700')
-                                    .addClass('bg-green-100 border-green-400 text-green-700');
-                                $('#register-error-message strong').text('Success! ');
-                                $('#register-error-message .message-text').text(response.message || 'Registration successful!');
-
-                                // Redirect after a short delay
-                                setTimeout(function() {
-                                    window.location.href = response.redirect_url || '{% url "login" %}';
-                                }, 2000);
+                        if (usernameData.is_taken) {
+                            $('#id_{{ form.username.name }}').addClass('border-red-500').removeClass('border-gray-300');
+                            let $errorMsg = $('#username-error-message');
+                            if ($errorMsg.length === 0) {
+                                $errorMsg = $('<p id="username-error-message" class="text-red-500 text-xs mt-1">' + usernameData.error_message + '</p>');
+                                $('#id_{{ form.username.name }}').parent().append($errorMsg);
                             } else {
-                                // Show error message
+                                $errorMsg.text(usernameData.error_message).removeClass('hidden');
+                            }
+
+                            $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
+                                .addClass('bg-red-100 border-red-400 text-red-700');
+                            $('#register-error-message strong').text('Error! ');
+                            $('#register-error-message .message-text').text('Please fix the errors in the form.');
+                            return;
+                        }
+
+                        if (emailData.is_taken) {
+                            $('#id_{{ form.email.name }}').addClass('border-red-500').removeClass('border-gray-300');
+                            let $errorMsg = $('#email-error-message');
+                            if ($errorMsg.length === 0) {
+                                $errorMsg = $('<p id="email-error-message" class="text-red-500 text-xs mt-1">' + emailData.error_message + '</p>');
+                                $('#id_{{ form.email.name }}').parent().append($errorMsg);
+                            } else {
+                                $errorMsg.text(emailData.error_message).removeClass('hidden');
+                            }
+
+                            $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
+                                .addClass('bg-red-100 border-red-400 text-red-700');
+                            $('#register-error-message strong').text('Error! ');
+                            $('#register-error-message .message-text').text('Please fix the errors in the form.');
+                            return;
+                        }
+
+                        // If we get here, both username and email are available
+
+                        // Show loading state
+                        const $button = $('#registerButton');
+                        const $spinner = $button.find('.spinner');
+                        const $icon = $button.find('i');
+                        const $text = $button.find('.button-text');
+
+                        $button.prop('disabled', true);
+                        $spinner.removeClass('hidden');
+                        $icon.addClass('hidden');
+                        $text.text('Registering...');
+
+                        // Get CSRF token
+                        const csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                        // Submit the form via AJAX
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "register" %}',
+                            data: $('#registerForm').serialize(),
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': csrftoken
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Show success message
+                                    $('#register-error-message').removeClass('hidden bg-red-100 border-red-400 text-red-700')
+                                        .addClass('bg-green-100 border-green-400 text-green-700');
+                                    $('#register-error-message strong').text('Success! ');
+                                    $('#register-error-message .message-text').text(response.message || 'Registration successful!');
+
+                                    // Redirect after a short delay
+                                    setTimeout(function() {
+                                        window.location.href = response.redirect_url || '{% url "login" %}';
+                                    }, 2000);
+                                } else {
+                                    // Show error message
+                                    $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
+                                        .addClass('bg-red-100 border-red-400 text-red-700');
+                                    $('#register-error-message strong').text('Error! ');
+                                    $('#register-error-message .message-text').text(response.error || 'Registration failed. Please try again.');
+
+                                    // Display field-specific errors if available
+                                    if (response.errors) {
+                                        for (const field in response.errors) {
+                                            const fieldId = '#id_' + field;
+                                            $(fieldId).addClass('border-red-500');
+                                            $(fieldId).parent().find('.text-red-500').text(response.errors[field].join(', '));
+                                        }
+                                    }
+
+                                    // Reset button state
+                                    $button.prop('disabled', false);
+                                    $spinner.addClass('hidden');
+                                    $icon.removeClass('hidden');
+                                    $text.text('Register');
+                                }
+                            },
+                            error: function() {
+                                // Show generic error message
                                 $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
                                     .addClass('bg-red-100 border-red-400 text-red-700');
                                 $('#register-error-message strong').text('Error! ');
-                                $('#register-error-message .message-text').text(response.error || 'Registration failed. Please try again.');
-
-                                // Display field-specific errors if available
-                                if (response.errors) {
-                                    for (const field in response.errors) {
-                                        const fieldId = '#id_' + field;
-                                        $(fieldId).addClass('border-red-500');
-                                        $(fieldId).parent().find('.text-red-500').text(response.errors[field].join(', '));
-                                    }
-                                }
+                                $('#register-error-message .message-text').text('An error occurred. Please try again.');
 
                                 // Reset button state
                                 $button.prop('disabled', false);
@@ -341,20 +504,7 @@
                                 $icon.removeClass('hidden');
                                 $text.text('Register');
                             }
-                        },
-                        error: function() {
-                            // Show generic error message
-                            $('#register-error-message').removeClass('hidden bg-green-100 border-green-400 text-green-700')
-                                .addClass('bg-red-100 border-red-400 text-red-700');
-                            $('#register-error-message strong').text('Error! ');
-                            $('#register-error-message .message-text').text('An error occurred. Please try again.');
-
-                            // Reset button state
-                            $button.prop('disabled', false);
-                            $spinner.addClass('hidden');
-                            $icon.removeClass('hidden');
-                            $text.text('Register');
-                        }
+                        });
                     });
                 });
 
