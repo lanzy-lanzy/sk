@@ -1,6 +1,7 @@
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.db import models, transaction
 from django.db.models import Q, Sum
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -9,12 +10,14 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from decimal import Decimal
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import letter, landscape, A4
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 from reportlab.platypus import HRFlowable
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from datetime import datetime
 import os
@@ -27,7 +30,8 @@ from .forms import (
     AccomplishmentReportForm,
     CustomUserCreationForm,
     UserProfileForm,
-    AccomplishmentReportImageForm
+    AccomplishmentReportImageForm,
+    CustomPasswordChangeForm
 )
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
@@ -39,22 +43,28 @@ def landing_page(request):
     completed_projects = Project.objects.filter(
         status='completed'
     ).select_related('chairman').order_by('-end_date')[:6]
-    
+
     projects_data = []
     for project in completed_projects:
         # Get the chairman's full address
         chairman = project.chairman
         address = chairman.address if chairman.address else "Address not available"
-        
+
+        # Get the latest accomplishment report image if project image is not available
+        project_image = project.image
+        if not project_image:
+            project_image = project.latest_image
+
         project_info = {
             'title': project.name,
-            'image': project.image or project.latest_image,
+            'image': project_image,
             'chairman_name': chairman.get_full_name() or chairman.username,
             'address': address,
-            'completion_date': project.end_date
+            'completion_date': project.end_date,
+            'description': project.description
         }
         projects_data.append(project_info)
-    
+
     context = {
         'completed_projects': projects_data
     }
@@ -65,8 +75,9 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            return redirect('dashboard')
+            # Don't log in the user automatically - they need approval first
+            messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can log in.')
+            return redirect('login')
     else:
         form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
@@ -79,9 +90,17 @@ def user_login(request):
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
-                login(request, user)
-                redirect_url = 'admin_dashboard' if user.is_superuser else 'dashboard'
-                return JsonResponse({'success': True, 'redirect_url': reverse(redirect_url)})
+                # Check if the user is approved
+                if user.is_approved or user.is_superuser:  # Superusers don't need approval
+                    login(request, user)
+                    redirect_url = 'admin_dashboard' if user.is_superuser else 'dashboard'
+                    return JsonResponse({'success': True, 'redirect_url': reverse(redirect_url)})
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Your account is pending approval. Please wait for an administrator to approve your account.',
+                        'redirect_url': reverse('approval_pending')
+                    })
             else:
                 return JsonResponse({
                     'success': False,
@@ -98,9 +117,43 @@ def user_login(request):
         form = AuthenticationForm()
     return render(request, 'login.html', {'form': form})
 
+def approval_pending(request):
+    return render(request, 'approval_pending.html')
+
 def user_logout(request):
     logout(request)
     return redirect('landing_page')
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_approval(request):
+    # Get users pending approval
+    pending_users = User.objects.filter(is_approved=False, is_superuser=False)
+    # Get approved users
+    approved_users = User.objects.filter(is_approved=True, is_superuser=False)
+
+    context = {
+        'pending_users': pending_users,
+        'approved_users': approved_users
+    }
+
+    return render(request, 'user_approval.html', context)
+
+@user_passes_test(lambda u: u.is_superuser)
+def approve_user(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        user.is_approved = True
+        user.save()
+        messages.success(request, f'User {user.username} has been approved.')
+    return redirect('user_approval')
+
+@user_passes_test(lambda u: u.is_superuser)
+def reject_user(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        user.delete()
+        messages.success(request, f'User has been rejected and removed from the system.')
+    return redirect('user_approval')
 
 # Dashboard and Budget Management Views
 
@@ -161,28 +214,28 @@ def create_new_year_budget(request):
         if form.is_valid():
             year = form.cleaned_data['year']
             total_budget = form.cleaned_data['total_budget']
-            
+
             with transaction.atomic():
                 # Get the previous year's budget
                 previous_year_budget = MainBudget.objects.filter(
                     chairman=request.user,
                     year=year-1
                 ).first()
-                
+
                 # Calculate remaining budget from previous year
                 remaining_budget = 0
                 if previous_year_budget:
                     remaining_budget = previous_year_budget.remaining_budget
-                
+
                 # Add remaining budget to the new total budget
                 new_total_budget = total_budget + remaining_budget
-                
+
                 main_budget, created = MainBudget.objects.get_or_create(
                     chairman=request.user,
                     year=year,
                     defaults={'total_budget': new_total_budget}
                 )
-                
+
                 if created:
                     messages.success(request, f'New budget for {year} created successfully! Total budget: ₱{new_total_budget:,.2f} (including ₱{remaining_budget:,.2f} from previous year)')
                 else:
@@ -284,7 +337,7 @@ def all_expenses(request):
     projects = Project.objects.filter(chairman=request.user).annotate(
     total_expenses=models.Sum('expenses__amount')
     )
-    
+
     search_query = request.GET.get('search', '')
     if search_query:
         projects = projects.filter(
@@ -292,7 +345,7 @@ def all_expenses(request):
             Q(expenses__item_name__icontains=search_query) |
             Q(expenses__description__icontains=search_query)
         ).distinct()
-    
+
     context = {
         'projects': projects,
         'total_expenses': total_expenses,
@@ -306,7 +359,7 @@ def all_expenses(request):
 def project_accomplishment_report(request, project_id):
     project = get_object_or_404(Project, id=project_id, chairman=request.user)
     accomplishment_reports = project.accomplishment_reports.all().order_by('-report_date')
-    
+
     context = {
         'project': project,
         'accomplishment_reports': accomplishment_reports,
@@ -314,20 +367,35 @@ def project_accomplishment_report(request, project_id):
     return render(request, 'project_accomplishment_report.html', context)
 
 @login_required
+def mark_project_completed(request, project_id):
+    project = get_object_or_404(Project, id=project_id, chairman=request.user)
+
+    if request.method == 'POST':
+        # Check if there's at least one accomplishment report
+        if project.accomplishment_reports.exists():
+            project.status = 'completed'
+            project.save()
+            messages.success(request, f'Project "{project.name}" has been marked as completed and will now be displayed on the landing page.')
+        else:
+            messages.error(request, 'Please add at least one accomplishment report before marking the project as completed.')
+
+    return redirect('project_accomplishment_report', project_id=project.id)
+
+@login_required
 def add_accomplishment_report(request, project_id):
     project = get_object_or_404(Project, id=project_id, chairman=request.user)
-    
+
     if request.method == 'POST':
         form = AccomplishmentReportForm(request.POST)
         image_form = AccomplishmentReportImageForm(request.POST, request.FILES)
-        
+
         if form.is_valid():
             with transaction.atomic():
                 # Save the report first
                 report = form.save(commit=False)
                 report.project = project
                 report.save()
-                
+
                 # Handle multiple image uploads
                 if 'images' in request.FILES:
                     for image in request.FILES.getlist('images'):
@@ -335,13 +403,13 @@ def add_accomplishment_report(request, project_id):
                             report=report,
                             image=image
                         )
-                
+
             messages.success(request, 'Accomplishment report added successfully.')
             return redirect('project_accomplishment_report', project_id=project.id)
     else:
         form = AccomplishmentReportForm()
         image_form = AccomplishmentReportImageForm()
-    
+
     return render(request, 'add_accomplishment_report.html', {
         'form': form,
         'image_form': image_form,
@@ -353,15 +421,37 @@ def add_accomplishment_report(request, project_id):
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your profile has been updated successfully!')
-            return redirect('dashboard')
+        # Check which form was submitted
+        if 'update_profile' in request.POST:
+            # Profile update form was submitted
+            profile_form = UserProfileForm(request.POST, request.FILES, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Your profile has been updated successfully!')
+                return redirect('edit_profile')
+            password_form = CustomPasswordChangeForm(user=request.user)
+        elif 'change_password' in request.POST:
+            # Password change form was submitted
+            password_form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+            if password_form.is_valid():
+                password_form.save()  # This will hash the password automatically
+                # Update the session to prevent the user from being logged out
+                update_session_auth_hash(request, request.user)
+                messages.success(request, 'Your password has been changed successfully!')
+                return redirect('edit_profile')
+            profile_form = UserProfileForm(instance=request.user)
+        else:
+            # Default case
+            profile_form = UserProfileForm(instance=request.user)
+            password_form = CustomPasswordChangeForm(user=request.user)
     else:
-        form = UserProfileForm(instance=request.user)
-    
-    return render(request, 'edit_profile.html', {'form': form})
+        profile_form = UserProfileForm(instance=request.user)
+        password_form = CustomPasswordChangeForm(user=request.user)
+
+    return render(request, 'edit_profile.html', {
+        'form': profile_form,
+        'password_form': password_form
+    })
 
 # PDF Export Functionality
 
@@ -410,13 +500,13 @@ def generate_pdf_report(response, user, projects):
 
     for project in projects:
         elements.append(Paragraph(f"Project: {project.name}", subheading_style))
-        
+
         # Project summary
         project_data = [
             ["Budget", "Expenses", "Remaining"],
             [f"{project.budget:,.2f}", f"{project.total_expenses():,.2f}", f"{project.remaining_budget:,.2f}"]
         ]
-        
+
         project_table = Table(project_data, colWidths=[2*inch, 2*inch, 2*inch])
         project_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#3498DB")),
@@ -436,7 +526,7 @@ def generate_pdf_report(response, user, projects):
         ]))
         elements.append(project_table)
         elements.append(Spacer(1, 0.2*inch))
-        
+
         # Expense details
         elements.append(Paragraph("Expense Details", subheading_style))
         expense_data = [["Item Name", "Description", "Quantity", "Price per Unit", "Amount"]]
@@ -483,358 +573,204 @@ def generate_pdf_report(response, user, projects):
 
 @login_required
 def export_project_pdf(request, project_id):
-    # Get project and related data
-    if request.user.is_superuser:
-        project = get_object_or_404(Project, id=project_id)
-    else:
-        project = get_object_or_404(Project, id=project_id, chairman=request.user)
+    project = get_object_or_404(Project, id=project_id)
     
-    expenses = project.expenses.all().order_by('-date_incurred')
-    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
-    remaining_budget = project.allocated_budget - total_expenses
-    accomplishment_reports = project.accomplishment_reports.all().order_by('-report_date')
-
-    # Create PDF
+    # Create response
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="project_{project.id}_report.pdf"'
-
-    # Create the PDF object using letter size landscape
+    response['Content-Disposition'] = f'attachment; filename="{project.name.replace(" ", "_")}_report.pdf"'
+    
+    # Create the PDF object using ReportLab with A4 size
     doc = SimpleDocTemplate(
         response,
-        pagesize=landscape(letter),
-        rightMargin=40,
-        leftMargin=40,
-        topMargin=40,
-        bottomMargin=40
+        pagesize=A4,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
     )
-
-    # Define styles
-    styles = getSampleStyleSheet()
     
-    # Custom styles
+    styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=28,
+        fontName='Helvetica-Bold',
+        fontSize=24,
+        textColor=colors.HexColor('#1a5f7a'),
         spaceAfter=30,
         alignment=TA_CENTER,
-        textColor=colors.HexColor('#1a5f7a'),
-        fontName='Helvetica-Bold'
-    )
-    
-    heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
-        fontSize=18,
-        spaceBefore=25,
-        spaceAfter=15,
-        textColor=colors.HexColor('#1a5f7a'),
-        fontName='Helvetica-Bold',
-        borderPadding=(0, 0, 2, 0),  # bottom border padding
-        borderWidth=1,
-        borderColor=colors.HexColor('#1a5f7a')
-    )
-    
-    subheading_style = ParagraphStyle(
-        'CustomSubHeading',
-        parent=styles['Heading3'],
-        fontSize=14,
-        spaceBefore=15,
-        spaceAfter=10,
-        textColor=colors.HexColor('#2c3e50'),
-        fontName='Helvetica-Bold'
     )
     
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
+        fontName='Helvetica',
         fontSize=11,
-        spaceBefore=6,
-        spaceAfter=6,
-        textColor=colors.HexColor('#2c3e50'),
-        fontName='Helvetica'
     )
-
-    # Container for PDF elements
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=14,
+        textColor=colors.HexColor('#1a5f7a'),
+        spaceAfter=20,
+    )
+    
     elements = []
-
-    # Add logo or header image if exists
-    try:
-        logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
-        if os.path.exists(logo_path):
-            logo = Image(logo_path, width=100, height=100)
-            logo.hAlign = 'CENTER'
-            elements.append(logo)
-            elements.append(Spacer(1, 20))
-    except:
-        pass
-
-    # Title with decorative line
-    elements.append(Paragraph(f"Project Report", title_style))
-    elements.append(Paragraph(f"{project.name}", subheading_style))
+    
+    # Title
+    elements.append(Paragraph(project.name, title_style))
     elements.append(HRFlowable(
         width="100%",
         thickness=2,
         color=colors.HexColor('#1a5f7a'),
         spaceBefore=10,
-        spaceAfter=20,
-        lineCap='round'
+        spaceAfter=20
     ))
 
-    # Project Overview Section
+    # Project Overview
     elements.append(Paragraph("Project Overview", heading_style))
-    
-    # Project details table with better styling
-    project_data = [
-        ["Chairman", f"{project.chairman.get_full_name()}"],
-        ["Start Date", f"{project.start_date.strftime('%B %d, %Y')}"],
-        ["End Date", f"{project.end_date.strftime('%B %d, %Y')}"],
-        ["Status", get_project_status(project)],
+    overview_data = [
+        ["Chairman", project.chairman.get_full_name()],
+        ["Start Date", project.start_date.strftime('%B %d, %Y')],
+        ["End Date", project.end_date.strftime('%B %d, %Y')],
+        ["Status", project.get_status_display()],
+        ["Description", project.description]
     ]
     
-    t = Table(project_data, colWidths=[150, 350])
-    t.setStyle(TableStyle([
+    overview_table = Table(overview_data, colWidths=[100, 400])
+    overview_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1a5f7a')),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e9ecef')),
-        ('PADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
-        ('TOPPADDING', (0, 0), (-1, -1), 15),
+        ('PADDING', (0, 0), (-1, -1), 8)
     ]))
-    elements.append(t)
-    
-    # Project description in a box
-    elements.append(Spacer(1, 15))
-    elements.append(Paragraph("Description", subheading_style))
-    description_table = Table([[project.description]], colWidths=[500])
-    description_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c3e50')),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#e9ecef')),
-        ('PADDING', (0, 0), (-1, -1), 15),
-    ]))
-    elements.append(description_table)
+    elements.append(overview_table)
     elements.append(Spacer(1, 20))
 
-    # Budget Overview Section with colorful indicators
-    elements.append(Paragraph("Budget Overview", heading_style))
-    
-    utilization = (total_expenses/project.allocated_budget*100 if project.allocated_budget else 0)
-    if utilization >= 90:
-        utilization_color = colors.HexColor('#dc3545')  # red
-    elif utilization >= 70:
-        utilization_color = colors.HexColor('#ffc107')  # yellow
-    else:
-        utilization_color = colors.HexColor('#28a745')  # green
-    
+    # Budget Information
+    elements.append(Paragraph("Budget Information", heading_style))
     budget_data = [
-        ["Allocated Budget", f"₱{project.allocated_budget:,.2f}"],
-        ["Total Expenses", f"₱{total_expenses:,.2f}"],
-        ["Remaining Budget", f"₱{remaining_budget:,.2f}"],
-        ["Budget Utilization", f"{utilization:.1f}%"],
+        ["Allocated Budget", f"PHP {project.allocated_budget:,.2f}"],
+        ["Total Expenses", f"PHP {project.total_expenses():,.2f}"],
+        ["Remaining Budget", f"PHP {project.remaining_budget:,.2f}"]
     ]
     
-    t = Table(budget_data, colWidths=[150, 350])
-    t.setStyle(TableStyle([
+    budget_table = Table(budget_data, colWidths=[100, 400])
+    budget_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f9fa')),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1a5f7a')),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e9ecef')),
-        ('PADDING', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
-        ('TOPPADDING', (0, 0), (-1, -1), 15),
-        ('TEXTCOLOR', (1, -1), (1, -1), utilization_color),  # Color the utilization percentage
-        ('FONTNAME', (1, -1), (1, -1), 'Helvetica-Bold'),
+        ('PADDING', (0, 0), (-1, -1), 8)
     ]))
-    elements.append(t)
-    
-    elements.append(PageBreak())
+    elements.append(budget_table)
+    elements.append(Spacer(1, 20))
 
-    # Expenses Section with improved table
-    elements.append(Paragraph("Expenses", heading_style))
-    if expenses:
-        expense_data = [["Date", "Item", "Quantity", "Price per Unit", "Amount", "Description"]]
-        for expense in expenses:
+    # Expenses
+    if project.expenses.exists():
+        elements.append(Paragraph("Expense Details", heading_style))
+        expense_data = [["Date", "Item", "Amount", "Description"]]
+        for expense in project.expenses.all().order_by('-date_incurred'):
             expense_data.append([
                 expense.date_incurred.strftime('%Y-%m-%d'),
                 expense.item_name,
-                str(expense.quantity),
-                f"₱{expense.price_per_unit:,.2f}",
-                f"₱{expense.amount:,.2f}",
+                f"PHP {expense.amount:,.2f}",
                 expense.description
             ])
         
-        t = Table(expense_data, colWidths=[80, 100, 60, 80, 80, 150])
-        t.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        expense_table = Table(expense_data, colWidths=[80, 100, 100, 220])
+        expense_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a5f7a')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (2, 1), (2, -1), 'RIGHT'),
             ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e9ecef')),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ffffff')),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#ffffff'), colors.HexColor('#f8f9fa')]),
-            ('ALIGN', (2, 1), (4, -1), 'RIGHT'),  # Right align numbers
+            ('PADDING', (0, 0), (-1, -1), 8)
         ]))
-        elements.append(t)
-    else:
-        elements.append(Paragraph("No expenses recorded for this project.", normal_style))
-    
-    elements.append(PageBreak())
+        elements.append(expense_table)
+        elements.append(Spacer(1, 20))
 
-    # Accomplishment Reports Section with images
-    elements.append(Paragraph("Accomplishment Reports", heading_style))
-    
-    if accomplishment_reports:
+    # Project Images
+    accomplishment_reports = project.accomplishment_reports.all()
+    if accomplishment_reports.exists():
+        elements.append(Paragraph("Project Images", heading_style))
+        
         for report in accomplishment_reports:
-            # Report header with date in a colored box
-            header_table = Table([[f"Report for {report.report_date.strftime('%B %d, %Y')}"]], colWidths=[500])
-            header_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 14),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#1a5f7a')),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('PADDING', (0, 0), (-1, -1), 10),
-            ]))
-            elements.append(header_table)
-            elements.append(Spacer(1, 10))
-            
-            # Report details in a box
-            details_table = Table([[report.report_details]], colWidths=[500])
-            details_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, -1), 11),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c3e50')),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#e9ecef')),
-                ('PADDING', (0, 0), (-1, -1), 15),
-            ]))
-            elements.append(details_table)
-            
-            # Add images if they exist in a grid layout
-            report_images = list(report.report_images.all())
-            if report_images:
-                # Create image grid (2 images per row)
-                IMAGES_PER_ROW = 2
-                image_rows = []
-                current_row = []
+            if report.report_images.exists():
+                elements.append(Paragraph(f"Report Date: {report.report_date.strftime('%B %d, %Y')}", normal_style))
+                elements.append(Spacer(1, 10))
                 
-                for image in report_images:
+                for img in report.report_images.all():
                     try:
-                        img_path = image.image.path
-                        img = Image(img_path)
-                        
-                        # Calculate aspect ratio and size for grid
-                        img_width = 250  # Smaller width for grid layout
-                        aspect = img.imageWidth / img.imageHeight
-                        img_height = img_width / aspect
-                        
-                        # Ensure height is not too large
-                        if img_height > 200:
-                            img_height = 200
-                            img_width = img_height * aspect
-                        
-                        img.drawWidth = img_width
-                        img.drawHeight = img_height
-                        
-                        # Create caption
-                        caption_text = f"Image from {report.report_date.strftime('%B %d, %Y')}"
-                        if image.caption:
-                            caption_text += f"\n{image.caption}"
-                        
-                        caption = Paragraph(
-                            caption_text,
-                            ParagraphStyle(
-                                'Caption',
-                                parent=normal_style,
-                                alignment=TA_CENTER,
-                                textColor=colors.HexColor('#666666'),
-                                fontSize=8,
-                                spaceBefore=5,
-                                spaceAfter=5
-                            )
-                        )
-                        
-                        # Create a container for image and caption
-                        image_container = [img, caption]
-                        current_row.append(image_container)
-                        
-                        # Start new row when current row is full
-                        if len(current_row) == IMAGES_PER_ROW:
-                            image_rows.append(current_row)
-                            current_row = []
-                            
+                        # Get the full path of the image
+                        img_path = img.image.path
+                        # Add image to PDF with 120x120 dimensions
+                        img_obj = Image(img_path)
+                        img_obj.drawWidth = 120
+                        img_obj.drawHeight = 120
+                        elements.append(img_obj)
+                        elements.append(Spacer(1, 10))
+                        if img.caption:
+                            elements.append(Paragraph(f"Caption: {img.caption}", normal_style))
+                            elements.append(Spacer(1, 20))
                     except Exception as e:
-                        error_msg = Paragraph(f"Error loading image: {str(e)}", normal_style)
-                        current_row.append([error_msg])
-                
-                # Add any remaining images in the last row
-                if current_row:
-                    # Pad with empty cells if needed
-                    while len(current_row) < IMAGES_PER_ROW:
-                        current_row.append([Paragraph('', normal_style)])
-                    image_rows.append(current_row)
-                
-                # Create and style the image grid table
-                for row in image_rows:
-                    # Ensure all cells have proper flowable objects
-                    for i, cell in enumerate(row):
-                        if isinstance(cell, list) and len(cell) == 0:
-                            row[i] = [Paragraph('', normal_style)]
-                        elif isinstance(cell, str):
-                            row[i] = [Paragraph(cell, normal_style)]
-                    
-                    grid_table = Table(
-                        [row],
-                        colWidths=[250] * IMAGES_PER_ROW,
-                        rowHeights=[250]
-                    )
-                    grid_table.setStyle(TableStyle([
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                        ('TOPPADDING', (0, 0), (-1, -1), 10),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                    ]))
-                    
-                    elements.append(Spacer(1, 10))
-                    elements.append(grid_table)
-                    elements.append(Spacer(1, 10))
-            
-            elements.append(Spacer(1, 20))
-            elements.append(HRFlowable(
-                width="100%",
-                thickness=1,
-                color=colors.HexColor('#e9ecef'),
-                spaceBefore=10,
-                spaceAfter=20
-            ))
-    else:
-        elements.append(Paragraph("No accomplishment reports available.", normal_style))
+                        elements.append(Paragraph(f"Error loading image: {str(e)}", normal_style))
+                        elements.append(Spacer(1, 10))
 
-    # Build PDF with page numbers
-    def add_page_number(canvas, doc):
-        canvas.saveState()
-        canvas.setFont('Helvetica', 9)
-        canvas.setFillColor(colors.HexColor('#666666'))
-        page_num = canvas.getPageNumber()
-        text = f"Page {page_num}"
-        canvas.drawRightString(doc.pagesize[0] - 40, 30, text)
-        canvas.restoreState()
+    # Add signature section
+    elements.append(PageBreak())
+    
+    # Add logo
+    logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')  # Adjust path as needed
+    if os.path.exists(logo_path):
+        logo = Image(logo_path)
+        logo.drawWidth = 150
+        logo.drawHeight = 150
+        elements.append(logo)
+    
+    elements.append(Spacer(1, 3*inch))  # Adjust space between logo and signature
+    
+    # Report Date
+    date_style = ParagraphStyle(
+        'DateStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        alignment=TA_LEFT,
+    )
+    elements.append(Paragraph(f"Report Date: {timezone.now().strftime('%B %d, %Y')}", date_style))
+    elements.append(Spacer(1, 2*inch))
+    
+    # Signature line and details
+    signature_data = [
+        [Paragraph("Certified Correct:", normal_style)],
+        [Spacer(1, 1*inch)],  # Space for actual signature
+        [HRFlowable(width=200, thickness=1, color=colors.black)],
+        [Paragraph(f"<b>{project.chairman.get_full_name().upper()}</b>", normal_style)],
+        [Paragraph("SK Chairman", normal_style)]
+    ]
+    
+    signature_table = Table(signature_data, colWidths=[4*inch])
+    signature_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    
+    # Center the signature table on A4 page
+    signature_wrapper = Table([[signature_table]], colWidths=[A4[0]-72])  # 72 points = 1 inch margins
+    signature_wrapper.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    ]))
+    
+    elements.append(signature_wrapper)
 
-    doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+    # Build PDF
+    doc.build(elements)
     return response
 
 def get_project_status(project):
@@ -850,7 +786,7 @@ def get_project_status(project):
 def edit_expense(request, expense_id):
     expense = get_object_or_404(Expense, id=expense_id)
     project = expense.project
-    
+
     if request.method == 'POST':
         form = ExpenseForm(request.POST, instance=expense)
         if form.is_valid():
@@ -859,7 +795,7 @@ def edit_expense(request, expense_id):
             return redirect('project_detail', project_id=project.id)
     else:
         form = ExpenseForm(instance=expense)
-    
+
     context = {
         'form': form,
         'expense': expense,
@@ -910,11 +846,14 @@ def admin_dashboard(request):
     min_budget = request.GET.get('min_budget')
     max_budget = request.GET.get('max_budget')
     year = request.GET.get('year')
-    
+
     # Initialize queryset for projects and budgets
     projects = Project.objects.all()
     main_budgets = MainBudget.objects.all()
-    
+
+    # Get users pending approval
+    pending_users = User.objects.filter(is_approved=False, is_superuser=False)
+
     # Apply search filters
     if search_query:
         projects = projects.filter(
@@ -927,13 +866,13 @@ def admin_dashboard(request):
             Q(chairman__first_name__icontains=search_query) |
             Q(chairman__last_name__icontains=search_query)
         )
-    
+
     # Apply date filters
     if date_from:
         projects = projects.filter(start_date__gte=date_from)
     if date_to:
         projects = projects.filter(end_date__lte=date_to)
-    
+
     # Apply status filter
     if status:
         today = timezone.now().date()
@@ -943,28 +882,28 @@ def admin_dashboard(request):
             projects = projects.filter(start_date__lte=today, end_date__gte=today)
         elif status == 'completed':
             projects = projects.filter(end_date__lt=today)
-    
+
     # Apply budget range filters
     if min_budget:
         projects = projects.filter(allocated_budget__gte=Decimal(min_budget))
     if max_budget:
         projects = projects.filter(allocated_budget__lte=Decimal(max_budget))
-    
+
     # Apply year filter
     if year:
         main_budgets = main_budgets.filter(year=year)
         projects = projects.filter(main_budget__year=year)
-    
+
     # Calculate totals
     total_budget = main_budgets.aggregate(total=Sum('total_budget'))['total'] or 0
     total_expenses = projects.aggregate(total=Sum('expenses__amount'))['total'] or 0
-    
+
     # Get available years for the filter dropdown
     available_years = MainBudget.objects.values_list('year', flat=True).distinct().order_by('-year')
-    
+
     # Count results
     results_count = projects.count()
-    
+
     context = {
         'all_projects': projects.order_by('-start_date'),
         'all_main_budgets': main_budgets.order_by('-year'),
@@ -979,9 +918,10 @@ def admin_dashboard(request):
         'selected_year': year,
         'available_years': available_years,
         'results_count': results_count,
+        'pending_users': pending_users,
         'search_applied': any([search_query, date_from, date_to, status, min_budget, max_budget, year])
     }
-    
+
     return render(request, 'admin_dashboard.html', context)
 
 @login_required
@@ -1018,7 +958,7 @@ def generate_comprehensive_report(request):
 
         # Get chairman's projects
         projects = Project.objects.filter(chairman=chairman).order_by('name')
-        
+
         if not projects:
             elements.append(Paragraph("No projects found for this chairman.", styles['Normal']))
             elements.append(Spacer(1, 12))
@@ -1033,11 +973,11 @@ def generate_comprehensive_report(request):
                 status = "Completed"
             elif project.start_date > timezone.now().date():
                 status = "Pending"
-            
+
             project_data.append([
                 project.name,
-                f"₱{project.allocated_budget:,.2f}",
-                f"₱{total_expenses:,.2f}",
+                f"PHP {project.allocated_budget:,.2f}",
+                f"PHP {total_expenses:,.2f}",
                 status
             ])
 
@@ -1064,7 +1004,7 @@ def generate_comprehensive_report(request):
         for project in projects:
             elements.append(Paragraph(f"Expenses for {project.name}:", styles['Heading3']))
             expenses = project.expenses.all().order_by('date_incurred')
-            
+
             if not expenses:
                 elements.append(Paragraph("No expenses recorded for this project.", styles['Normal']))
                 elements.append(Spacer(1, 12))
@@ -1075,7 +1015,7 @@ def generate_comprehensive_report(request):
                 expense_data.append([
                     expense.date_incurred.strftime('%Y-%m-%d'),
                     expense.item_name,
-                    f"₱{expense.amount:,.2f}",
+                    f"PHP {expense.amount:,.2f}",
                     expense.description
                 ])
 
@@ -1108,19 +1048,19 @@ def generate_comprehensive_report(request):
 @login_required
 def view_image(request, report_id, image_index):
     report = get_object_or_404(AccomplishmentReport, id=report_id)
-    
+
     # Ensure user has access to this report
     if not request.user.is_superuser and report.project.chairman != request.user:
         raise Http404
-    
+
     # Get all images for this report
     images = list(report.report_images.all().order_by('created_at'))
-    
+
     if not images or image_index < 0 or image_index >= len(images):
         raise Http404
-    
+
     current_image = images[image_index]
-    
+
     context = {
         'image_url': current_image.image.url,
         'report_date': report.report_date.strftime("%B %d, %Y"),
@@ -1131,5 +1071,14 @@ def view_image(request, report_id, image_index):
         'prev_index': image_index - 1,
         'next_index': image_index + 1,
     }
-    
+
     return render(request, 'partials/image_modal.html', context)
+
+
+
+
+
+
+
+
+

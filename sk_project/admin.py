@@ -8,13 +8,13 @@ class CustomUserAdmin(UserAdmin):
     """
     Custom admin interface for the User model.
     """
-    list_display = ('username', 'email', 'is_chairman', 'get_profile_picture', 'address', 'contact_number', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'is_chairman', 'get_profile_picture', 'address', 'contact_number', 'is_approved', 'is_staff', 'is_active')
     search_fields = ('username', 'email', 'address', 'contact_number')
-    list_filter = ('is_chairman', 'is_staff', 'is_superuser', 'is_active', 'groups')
+    list_filter = ('is_approved', 'is_chairman', 'is_staff', 'is_superuser', 'is_active', 'groups')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name', 'email', 'profile_picture', 'address', 'contact_number')}),
-        ('Permissions', {'fields': ('is_chairman', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Permissions', {'fields': ('is_approved', 'is_chairman', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important Dates', {'fields': ('last_login', 'date_joined')}),
     )
 

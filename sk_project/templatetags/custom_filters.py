@@ -1,5 +1,6 @@
 from django import template
 from decimal import Decimal
+from django.db.models import QuerySet
 
 register = template.Library()
 
@@ -36,7 +37,7 @@ def percentage(value, total):
             value = Decimal(str(value))
         if not isinstance(total, Decimal):
             total = Decimal(str(total))
-        
+
         if total > 0:
             return round((value / total) * 100)
         return 0
@@ -54,3 +55,13 @@ def sum_expenses(expenses):
         return Decimal('0')
     except:
         return Decimal('0')
+
+@register.filter
+def filter_completed(projects):
+    """Check if there are any completed projects in the queryset"""
+    try:
+        if not projects:
+            return False
+        return any(project.status == 'completed' for project in projects)
+    except:
+        return False

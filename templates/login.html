@@ -168,19 +168,26 @@
                                 // Show error message
                                 $errorDiv.removeClass('hidden');
                                 $errorDiv.find('.message-text').text(response.error);
-                                
+
                                 // Reset button state
                                 $button.prop('disabled', false);
                                 $spinner.hide();
                                 $icon.show();
                                 $text.text('Login');
+
+                                // If there's a redirect URL in the response, redirect to it
+                                if (response.redirect_url) {
+                                    setTimeout(function() {
+                                        window.location.href = response.redirect_url;
+                                    }, 1500); // Redirect after 1.5 seconds to show the error message first
+                                }
                             }
                         },
                         error: function() {
                             // Show generic error message
                             $errorDiv.removeClass('hidden');
                             $errorDiv.find('.message-text').text('An error occurred. Please try again.');
-                            
+
                             // Reset button state
                             $button.prop('disabled', false);
                             $spinner.hide();

@@ -70,7 +70,7 @@
             </section>
 
             <!-- Features Section -->
-          
+
             <!-- Recently Completed Projects Section -->
             <section class="container mx-auto px-4 py-16">
                 <h2 class="text-4xl font-bold text-tertiary mb-12 text-center">
@@ -119,12 +119,23 @@
                                     <p class="font-semibold text-tertiary">{{ project.completion_date|date:"F d, Y" }}</p>
                                 </div>
                             </div>
+                            {% if project.description %}
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-sm text-gray-600 line-clamp-3">{{ project.description }}</p>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-center mt-4 pt-4 border-t border-gray-200">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Completed Project
+                                </span>
+                            </div>
                         </div>
                     </div>
                     {% empty %}
                     <div class="col-span-full glass-effect rounded-3xl p-12 text-center">
                         <i class="fas fa-info-circle text-6xl text-tertiary/50 mb-4"></i>
                         <p class="text-xl text-gray-600">No completed projects available at the moment.</p>
+                        <p class="mt-4 text-gray-500">Completed projects will appear here once chairmen mark their projects as completed.</p>
                     </div>
                     {% endfor %}
                 </div>

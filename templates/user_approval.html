@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}User Approval - SK Budget{% endblock %}
+
+{% block content %}
+    <h1 class="text-3xl font-bold mb-6 text-tertiary">
+        <i class="fas fa-user-check mr-2"></i>User Approval
+    </h1>
+
+    {% if messages %}
+        <div id="messages-container" class="mb-8">
+            {% for message in messages %}
+                <div class="message {% if message.tags == 'success' %}bg-green-100 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %} border-l-4 p-4 mb-4 rounded-r" role="alert">
+                    <p class="font-bold">{{ message.tags|title }}</p>
+                    <p>{{ message }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mb-8">
+        <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table id="pendingUsersTable" class="min-w-full">
+                <thead class="bg-tertiary text-white">
+                    <tr>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-user mr-2"></i>Username</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-envelope mr-2"></i>Email</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-calendar-alt mr-2"></i>Date Joined</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-cogs mr-2"></i>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in pending_users %}
+                        <tr class="hover:bg-secondary">
+                            <td class="py-3 px-4 border-b">{{ user.username }}</td>
+                            <td class="py-3 px-4 border-b">{{ user.email }}</td>
+                            <td class="py-3 px-4 border-b">{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td class="py-3 px-4 border-b">
+                                <div class="flex space-x-2">
+                                    <form method="post" action="{% url 'approve_user' user.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="inline-flex items-center px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300 text-sm">
+                                            <i class="fas fa-check mr-1"></i>Approve
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'reject_user' user.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="inline-flex items-center px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">
+                                            <i class="fas fa-times mr-1"></i>Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-4 px-4 text-center text-gray-500">No users pending approval.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-users mr-2"></i>Approved Users</h2>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table id="approvedUsersTable" class="min-w-full">
+                <thead class="bg-tertiary text-white">
+                    <tr>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-user mr-2"></i>Username</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-envelope mr-2"></i>Email</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-calendar-alt mr-2"></i>Date Joined</th>
+                        <th class="py-3 px-4 border-b"><i class="fas fa-check-circle mr-2"></i>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in approved_users %}
+                        <tr class="hover:bg-secondary">
+                            <td class="py-3 px-4 border-b">{{ user.username }}</td>
+                            <td class="py-3 px-4 border-b">{{ user.email }}</td>
+                            <td class="py-3 px-4 border-b">{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td class="py-3 px-4 border-b">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Approved
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-4 px-4 text-center text-gray-500">No approved users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

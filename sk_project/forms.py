@@ -7,7 +7,8 @@ class MainBudgetForm(forms.ModelForm):
         fields = ['year', 'total_budget']
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
+from django.contrib.auth.hashers import make_password, check_password
 from .models import User
 
 class CustomUserCreationForm(UserCreationForm):
@@ -80,3 +81,22 @@ class UserProfileForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3, 'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary'}),
             'contact_number': forms.TextInput(attrs={'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary'}),
         }
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Custom form for changing password with enhanced security"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add custom styling to the form fields
+        self.fields['old_password'].widget.attrs.update({
+            'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary',
+            'placeholder': 'Enter your current password'
+        })
+        self.fields['new_password1'].widget.attrs.update({
+            'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary',
+            'placeholder': 'Enter new password'
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary',
+            'placeholder': 'Confirm new password'
+        })

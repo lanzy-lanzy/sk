@@ -49,6 +49,9 @@
                         <a href="{% url 'admin_dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
                             <i class="fas fa-user-shield mr-3 text-xl"></i> <span class="text-lg">Admin Dashboard</span>
                         </a>
+                        <a href="{% url 'user_approval' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'user_approval' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
+                            <i class="fas fa-user-check mr-3 text-xl"></i> <span class="text-lg">User Approval</span>
+                        </a>
                     {% else%}
 
                         <a href="{% url 'dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">

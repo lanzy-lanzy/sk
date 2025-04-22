@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account Pending Approval - SK Budget</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#F3CA52',
+                            secondary: '#F6E9B2',
+                            tertiary: '#0A6847',
+                            quaternary: '#7ABA78',
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            .pulse {
+                animation: pulse 2s infinite;
+            }
+        </style>
+    </head>
+    <body class="bg-gradient-to-br from-secondary via-primary to-quaternary min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-tertiary relative z-10 transform hover:scale-105 transition-all duration-300">
+            <div class="text-center mb-6">
+                <i class="fas fa-user-clock text-6xl text-tertiary mb-4 pulse"></i>
+                <h2 class="text-3xl font-bold text-tertiary">Account Pending Approval</h2>
+            </div>
+            
+            <p class="text-gray-600 mb-6 text-center">
+                Thank you for registering! Your account is currently pending approval from an administrator. You will be notified once your account has been approved.
+            </p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            You will not be able to log in until your account is approved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <a href="{% url 'login' %}" class="bg-tertiary text-white px-6 py-3 rounded-full hover:bg-quaternary transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Return to Login
+                </a>
+            </div>
+        </div>
+    </body>
+</html>
