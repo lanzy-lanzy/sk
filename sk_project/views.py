@@ -77,7 +77,27 @@ def register(request):
             user = form.save()
             # Don't log in the user automatically - they need approval first
             messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can log in.')
-            return redirect('login')
+
+            # Check if it's an AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse('login'),
+                    'message': 'Your account has been created successfully! Please wait for admin approval before you can log in.'
+                })
+            else:
+                return redirect('login')
+        else:
+            # If it's an AJAX request, return form errors as JSON
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                errors = {}
+                for field, error_list in form.errors.items():
+                    errors[field] = [str(error) for error in error_list]
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors,
+                    'error': 'Please correct the errors in the form.'
+                })
     else:
         form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
