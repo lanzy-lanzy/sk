@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
         <title>Register - SK Budget</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -45,9 +45,19 @@
             .slide-in {
                 animation: slideIn 0.5s ease-out;
             }
+
+            /* Mobile optimizations */
+            @media (max-width: 640px) {
+                .password-requirements {
+                    font-size: 0.65rem;
+                }
+                input, button {
+                    font-size: 14px;
+                }
+            }
         </style>
     </head>
-    <body class="bg-gradient-to-br from-secondary via-primary to-quaternary min-h-screen flex items-center justify-center overflow-hidden px-4 py-6">
+    <body class="bg-gradient-to-br from-secondary via-primary to-quaternary min-h-screen flex items-center justify-center px-4 py-6 overflow-y-auto">
         <div class="coin hidden sm:block" style="top: 10%; left: 10%;">
             <i class="fas fa-coins text-4xl sm:text-6xl text-yellow-500"></i>
         </div>
@@ -60,7 +70,7 @@
         <div class="coin hidden sm:block" style="bottom: 25%; right: 10%;">
             <i class="fas fa-chart-line text-4xl sm:text-6xl text-blue-500"></i>
         </div>
-        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md border-t-4 border-tertiary relative z-10 transform hover:scale-105 transition-all duration-300 slide-in">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md border-t-4 border-tertiary relative z-10 transition-all duration-300 slide-in my-8">
             <h2 class="text-3xl font-bold text-tertiary mb-6 text-center pulse"><i class="fas fa-user-plus mr-2"></i>Register</h2>
             <p class="text-center text-gray-600 mb-4">After registration, your account will need admin approval before you can log in.</p>
             <form method="post" class="space-y-6" id="registerForm" novalidate>
@@ -101,13 +111,17 @@
                         <div class="w-full bg-gray-200 rounded-full h-1.5">
                             <div class="bg-red-500 h-1.5 rounded-full password-strength-bar" style="width: 10%"></div>
                         </div>
-                        <ul class="text-xs text-gray-500 mt-1 space-y-1 password-requirements">
-                            <li class="req-length"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least 8 characters</li>
-                            <li class="req-uppercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one uppercase letter</li>
-                            <li class="req-lowercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one lowercase letter</li>
-                            <li class="req-number"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one number</li>
-                            <li class="req-special"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one special character</li>
-                        </ul>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-0">
+                            <ul class="text-xs text-gray-500 mt-1 space-y-0.5 password-requirements">
+                                <li class="req-length"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least 8 characters</li>
+                                <li class="req-uppercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one uppercase letter</li>
+                                <li class="req-lowercase"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one lowercase letter</li>
+                            </ul>
+                            <ul class="text-xs text-gray-500 mt-1 space-y-0.5">
+                                <li class="req-number"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one number</li>
+                                <li class="req-special"><i class="fas fa-times-circle text-red-500 mr-1"></i>At least one special character</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="relative group">
@@ -139,6 +153,18 @@
                 $('#id_{{ form.password1.name }}').on('focus', function() {
                     $('.password-strength').removeClass('hidden');
                 });
+
+                // Hide password requirements on blur for mobile
+                if (window.innerWidth < 640) {
+                    $('#id_{{ form.password1.name }}').on('blur', function() {
+                        // Only hide if we're moving to a different field (not just clicking within the field)
+                        setTimeout(function() {
+                            if (document.activeElement !== document.getElementById('id_{{ form.password1.name }}')) {
+                                $('.password-strength').addClass('hidden');
+                            }
+                        }, 100);
+                    });
+                }
 
                 // Show username requirements on focus
                 $('#id_{{ form.username.name }}').on('focus', function() {
@@ -378,6 +404,13 @@
                             .addClass('bg-red-100 border-red-400 text-red-700');
                         $('#register-error-message strong').text('Error! ');
                         $('#register-error-message .message-text').text('Please fix the errors in the form.');
+
+                        // Scroll to the error message or register button on mobile
+                        if (window.innerWidth < 640) {
+                            setTimeout(function() {
+                                document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 100);
+                        }
                         return;
                     }
 
@@ -411,6 +444,13 @@
                                 .addClass('bg-red-100 border-red-400 text-red-700');
                             $('#register-error-message strong').text('Error! ');
                             $('#register-error-message .message-text').text('Please fix the errors in the form.');
+
+                            // Scroll to the error message or register button on mobile
+                            if (window.innerWidth < 640) {
+                                setTimeout(function() {
+                                    document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 100);
+                            }
                             return;
                         }
 
@@ -428,6 +468,13 @@
                                 .addClass('bg-red-100 border-red-400 text-red-700');
                             $('#register-error-message strong').text('Error! ');
                             $('#register-error-message .message-text').text('Please fix the errors in the form.');
+
+                            // Scroll to the error message or register button on mobile
+                            if (window.innerWidth < 640) {
+                                setTimeout(function() {
+                                    document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 100);
+                            }
                             return;
                         }
 
@@ -489,6 +536,13 @@
                                     $spinner.addClass('hidden');
                                     $icon.removeClass('hidden');
                                     $text.text('Register');
+
+                                    // Scroll to the error message or register button on mobile
+                                    if (window.innerWidth < 640) {
+                                        setTimeout(function() {
+                                            document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        }, 100);
+                                    }
                                 }
                             },
                             error: function() {
@@ -503,6 +557,13 @@
                                 $spinner.addClass('hidden');
                                 $icon.removeClass('hidden');
                                 $text.text('Register');
+
+                                // Scroll to the error message or register button on mobile
+                                if (window.innerWidth < 640) {
+                                    setTimeout(function() {
+                                        document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }, 100);
+                                }
                             }
                         });
                     });
