@@ -177,6 +177,198 @@ function confirmDelete(projectId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Get current date and year for validation
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const today = currentDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    // Set min attribute for year inputs
+    const yearInput = document.getElementById('year');
+    const newYearInput = document.getElementById('new_year');
+
+    // Set min attribute for date inputs in project form
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+
+    if (yearInput) {
+        yearInput.min = currentYear;
+        yearInput.value = currentYear;
+    }
+
+    if (newYearInput) {
+        newYearInput.min = currentYear;
+        newYearInput.value = currentYear;
+    }
+
+    // Add validation for budget form
+    const budgetForm = document.getElementById('budgetForm');
+    if (budgetForm) {
+        budgetForm.addEventListener('submit', function(e) {
+            const year = parseInt(yearInput.value);
+            const budget = parseFloat(document.getElementById('total_budget').value);
+            const yearError = document.getElementById('year-error');
+            let isValid = true;
+
+            if (year < currentYear) {
+                yearError.classList.remove('hidden');
+                yearInput.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                yearError.classList.add('hidden');
+                yearInput.classList.remove('border-red-500');
+            }
+
+            if (isNaN(budget) || budget <= 0) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Live validation
+        yearInput.addEventListener('input', function() {
+            const year = parseInt(this.value);
+            const yearError = document.getElementById('year-error');
+
+            if (year < currentYear) {
+                yearError.classList.remove('hidden');
+                this.classList.add('border-red-500');
+            } else {
+                yearError.classList.add('hidden');
+                this.classList.remove('border-red-500');
+            }
+        });
+    }
+
+    // Add validation for project form date fields
+    const projectForm = document.getElementById('projectForm');
+    if (projectForm && startDateInput && endDateInput) {
+        // Set min attribute for date inputs
+        startDateInput.min = today;
+        endDateInput.min = today;
+
+        // Validate start date on change
+        startDateInput.addEventListener('change', function() {
+            const startDate = this.value;
+            const startDateError = document.getElementById('start-date-error');
+
+            if (startDate < today) {
+                startDateError.classList.remove('hidden');
+                this.classList.add('border-red-500');
+            } else {
+                startDateError.classList.add('hidden');
+                this.classList.remove('border-red-500');
+
+                // Update end date min value
+                endDateInput.min = startDate;
+
+                // If end date is before start date, clear it
+                if (endDateInput.value && endDateInput.value < startDate) {
+                    endDateInput.value = '';
+                }
+            }
+        });
+
+        // Validate end date on change
+        endDateInput.addEventListener('change', function() {
+            const endDate = this.value;
+            const startDate = startDateInput.value;
+            const endDateError = document.getElementById('end-date-error');
+
+            if (!startDate) {
+                endDateError.textContent = 'Please select a start date first.';
+                endDateError.classList.remove('hidden');
+                this.classList.add('border-red-500');
+                this.value = '';
+            } else if (endDate < startDate) {
+                endDateError.textContent = 'End date must be after the start date.';
+                endDateError.classList.remove('hidden');
+                this.classList.add('border-red-500');
+            } else {
+                endDateError.classList.add('hidden');
+                this.classList.remove('border-red-500');
+            }
+        });
+
+        // Form submission validation
+        projectForm.addEventListener('submit', function(e) {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const budget = parseFloat(document.getElementById('budget').value);
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            let isValid = true;
+
+            // Validate start date
+            if (!startDate || startDate < today) {
+                document.getElementById('start-date-error').classList.remove('hidden');
+                startDateInput.classList.add('border-red-500');
+                isValid = false;
+            }
+
+            // Validate end date
+            if (!endDate || (startDate && endDate < startDate)) {
+                document.getElementById('end-date-error').classList.remove('hidden');
+                endDateInput.classList.add('border-red-500');
+                isValid = false;
+            }
+
+            // Validate other fields
+            if (!name.trim() || !description.trim() || isNaN(budget) || budget <= 0) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Add validation for new year budget form
+    const newYearBudgetForm = document.getElementById('newYearBudgetForm');
+    if (newYearBudgetForm) {
+        newYearBudgetForm.addEventListener('submit', function(e) {
+            const year = parseInt(newYearInput.value);
+            const budget = parseFloat(document.getElementById('new_total_budget').value);
+            const yearError = document.getElementById('new-year-error');
+            let isValid = true;
+
+            if (year < currentYear) {
+                yearError.classList.remove('hidden');
+                newYearInput.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                yearError.classList.add('hidden');
+                newYearInput.classList.remove('border-red-500');
+            }
+
+            if (isNaN(budget) || budget <= 0) {
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Live validation
+        newYearInput.addEventListener('input', function() {
+            const year = parseInt(this.value);
+            const yearError = document.getElementById('new-year-error');
+
+            if (year < currentYear) {
+                yearError.classList.remove('hidden');
+                this.classList.add('border-red-500');
+            } else {
+                yearError.classList.add('hidden');
+                this.classList.remove('border-red-500');
+            }
+        });
+    }
+
+    // Handle message fadeout
     var messages = document.querySelectorAll('.message');
     messages.forEach(function(message) {
         setTimeout(function() {
@@ -188,6 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3500);
     });
 
+    // Handle budget usage bar animation
     const bar = document.getElementById('budget-usage-bar');
     const percentage = document.getElementById('usage-percentage');
     const targetPercentage = {{ usage_percentage|floatformat:2 }};
@@ -212,7 +405,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    updateBar();
+    if (bar && percentage) {
+        updateBar();
+    }
 });
 </script>
 {% endblock %}

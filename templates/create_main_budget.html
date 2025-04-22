@@ -6,10 +6,90 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-3xl font-bold text-tertiary mb-6">Create Main Budget</h2>
 
-        <form method="post" class="space-y-4">
+        <form method="post" class="space-y-4" id="mainBudgetForm">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded hover:bg-quaternary">Create Budget</button>
+            <div class="mb-4">
+                <label for="id_year" class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="far fa-calendar-alt mr-2"></i>Year
+                </label>
+                <input type="number" name="year" id="id_year" min="{{ current_year }}" value="{{ current_year }}" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" required>
+                <p class="text-sm text-gray-500 mt-1">Only current year ({{ current_year }}) and future years are allowed.</p>
+                <div id="year-error" class="text-red-500 text-sm hidden">Please enter a valid year ({{ current_year }} or later).</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="id_total_budget" class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-dollar-sign mr-2"></i>Total Budget
+                </label>
+                <input type="number" name="total_budget" id="id_total_budget" step="0.01" min="0" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" required>
+                <div id="budget-error" class="text-red-500 text-sm hidden">Please enter a valid budget amount greater than 0.</div>
+            </div>
+
+            <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded hover:bg-quaternary transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-opacity-50">
+                <i class="fas fa-check mr-2"></i>Create Budget
+            </button>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentYear = new Date().getFullYear();
+            const yearInput = document.getElementById('id_year');
+            const yearError = document.getElementById('year-error');
+            const budgetInput = document.getElementById('id_total_budget');
+            const budgetError = document.getElementById('budget-error');
+            const form = document.getElementById('mainBudgetForm');
+
+            // Set min attribute and default value
+            yearInput.min = currentYear;
+            yearInput.value = currentYear;
+
+            // Validate year on input
+            yearInput.addEventListener('input', function() {
+                const year = parseInt(this.value);
+                if (year < currentYear) {
+                    yearError.classList.remove('hidden');
+                    this.classList.add('border-red-500');
+                } else {
+                    yearError.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                }
+            });
+
+            // Validate budget on input
+            budgetInput.addEventListener('input', function() {
+                const budget = parseFloat(this.value);
+                if (isNaN(budget) || budget <= 0) {
+                    budgetError.classList.remove('hidden');
+                    this.classList.add('border-red-500');
+                } else {
+                    budgetError.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                }
+            });
+
+            // Form submission validation
+            form.addEventListener('submit', function(e) {
+                const year = parseInt(yearInput.value);
+                const budget = parseFloat(budgetInput.value);
+                let isValid = true;
+
+                if (year < currentYear) {
+                    yearError.classList.remove('hidden');
+                    yearInput.classList.add('border-red-500');
+                    isValid = false;
+                }
+
+                if (isNaN(budget) || budget <= 0) {
+                    budgetError.classList.remove('hidden');
+                    budgetInput.classList.add('border-red-500');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
 {% endblock %}

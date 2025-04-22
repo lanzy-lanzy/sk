@@ -238,24 +238,45 @@ def dashboard(request):
 
 @login_required
 def create_main_budget(request):
+    from datetime import datetime
+    current_year = datetime.now().year
+
     if request.method == 'POST':
         form = MainBudgetForm(request.POST)
         if form.is_valid():
+            year = form.cleaned_data['year']
+            # Server-side validation to ensure year is current or future
+            if year < current_year:
+                messages.error(request, f'Year must be {current_year} or later.')
+                return render(request, 'create_main_budget.html', {'form': form, 'current_year': current_year})
+
             main_budget = form.save(commit=False)
             main_budget.chairman = request.user
             main_budget.save()
             messages.success(request, 'Main budget created successfully!')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Error creating main budget. Please check your input.')
-    return redirect('dashboard')
+    else:
+        form = MainBudgetForm(initial={'year': current_year})
+
+    return render(request, 'create_main_budget.html', {'form': form, 'current_year': current_year})
 
 @login_required
 def create_new_year_budget(request):
+    from datetime import datetime
+    current_year = datetime.now().year
+
     if request.method == 'POST':
         form = MainBudgetForm(request.POST)
         if form.is_valid():
             year = form.cleaned_data['year']
             total_budget = form.cleaned_data['total_budget']
+
+            # Server-side validation to ensure year is current or future
+            if year < current_year:
+                messages.error(request, f'Year must be {current_year} or later.')
+                return redirect('dashboard')
 
             with transaction.atomic():
                 # Get the previous year's budget
@@ -292,9 +313,26 @@ def create_new_year_budget(request):
 
 @login_required
 def create_project(request):
+    from datetime import datetime
+    today = datetime.now().date()
+
     if request.method == 'POST':
         form = ProjectForm(request.POST)
         if form.is_valid():
+            # Server-side validation for dates
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+
+            # Validate start date is today or in the future
+            if start_date < today:
+                messages.error(request, 'Start date must be today or a future date.')
+                return redirect('dashboard')
+
+            # Validate end date is after start date
+            if end_date < start_date:
+                messages.error(request, 'End date must be after the start date.')
+                return redirect('dashboard')
+
             with transaction.atomic():
                 project = form.save(commit=False)
                 project.chairman = request.user
@@ -307,7 +345,16 @@ def create_project(request):
                 else:
                     messages.error(request, 'Insufficient funds in the main budget for this project.')
         else:
-            messages.error(request, 'Error creating project. Please check your input.')
+            # Get specific form errors
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field.capitalize()}: {error}")
+
+            if error_messages:
+                messages.error(request, f"Error creating project: {', '.join(error_messages)}")
+            else:
+                messages.error(request, 'Error creating project. Please check your input.')
     return redirect('dashboard')
 
 @login_required

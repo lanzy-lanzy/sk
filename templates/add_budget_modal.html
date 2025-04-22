@@ -7,7 +7,9 @@
                 {% csrf_token %}
                 <div class="mb-4">
                     <label for="year" class="block text-gray-700 text-sm font-bold mb-2"><i class="far fa-calendar-alt mr-2"></i>Year</label>
-                    <input type="number" id="year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year">
+                    <input type="number" id="year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year" min="2024" required>
+                    <p class="text-sm text-gray-500 mt-1">Only current year and future years are allowed.</p>
+                    <div id="year-error" class="text-red-500 text-xs mt-1 hidden">Please enter a valid year (current year or later).</div>
                 </div>
                 <div class="mb-6">
                     <label for="total_budget" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-dollar-sign mr-2"></i>Total Budget</label>
@@ -43,11 +45,15 @@
                 </div>
                 <div class="mb-4">
                     <label for="start_date" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-calendar-plus mr-2"></i>Start Date</label>
-                    <input type="date" id="start_date" name="start_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200">
+                    <input type="date" id="start_date" name="start_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" required>
+                    <p class="text-sm text-gray-500 mt-1">Only current date and future dates are allowed.</p>
+                    <div id="start-date-error" class="text-red-500 text-xs mt-1 hidden">Please select a date that is today or later.</div>
                 </div>
                 <div class="mb-6">
                     <label for="end_date" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-calendar-check mr-2"></i>End Date</label>
-                    <input type="date" id="end_date" name="end_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200">
+                    <input type="date" id="end_date" name="end_date" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" required>
+                    <p class="text-sm text-gray-500 mt-1">Must be after the start date.</p>
+                    <div id="end-date-error" class="text-red-500 text-xs mt-1 hidden">End date must be after the start date.</div>
                 </div>
                 <div class="flex justify-end">
                     <button type="button" onclick="closeProjectModal()" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"><i class="fas fa-times mr-2"></i>Cancel</button>
@@ -67,7 +73,9 @@
                 {% csrf_token %}
                 <div class="mb-4">
                     <label for="new_year" class="block text-gray-700 text-sm font-bold mb-2"><i class="far fa-calendar-alt mr-2"></i>Year</label>
-                    <input type="number" id="new_year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year">
+                    <input type="number" id="new_year" name="year" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter year" min="2024" required>
+                    <p class="text-sm text-gray-500 mt-1">Only current year and future years are allowed.</p>
+                    <div id="new-year-error" class="text-red-500 text-xs mt-1 hidden">Please enter a valid year (current year or later).</div>
                 </div>
                 <div class="mb-6">
                     <label for="new_total_budget" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-dollar-sign mr-2"></i>Total Budget</label>

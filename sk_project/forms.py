@@ -18,11 +18,37 @@ class CustomUserCreationForm(UserCreationForm):
 
 from django import forms
 from .models import Project
+from datetime import datetime
 
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = ['name', 'description', 'budget', 'start_date', 'end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200'}),
+            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200'}),
+        }
+
+    def clean_start_date(self):
+        start_date = self.cleaned_data.get('start_date')
+        today = datetime.now().date()
+
+        if start_date < today:
+            raise forms.ValidationError("Start date must be today or a future date.")
+
+        return start_date
+
+    def clean_end_date(self):
+        end_date = self.cleaned_data.get('end_date')
+        start_date = self.cleaned_data.get('start_date')
+
+        if not start_date:  # If start_date validation failed, skip this validation
+            return end_date
+
+        if end_date < start_date:
+            raise forms.ValidationError("End date must be after the start date.")
+
+        return end_date
 
 from django import forms
 from .models import Expense
