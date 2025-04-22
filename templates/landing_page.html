@@ -38,16 +38,16 @@
         <header class="fixed w-full top-0 z-50">
             <nav class="glass-effect text-tertiary py-4">
                 <div class="container mx-auto px-4 flex justify-between items-center">
-                    <h1 class="text-2xl font-bold flex items-center">
+                    <h1 class="text-xl sm:text-2xl font-bold flex items-center">
                         <i class="fas fa-coins mr-2 text-tertiary"></i>
                         <span class="bg-clip-text text-transparent bg-gradient-to-r from-tertiary to-quaternary">SK Budget</span>
                     </h1>
-                    <div class="flex items-center">
-                        <a href="{% url 'register' %}" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-6 rounded-full transition duration-300 transform hover:scale-105 mr-2">
-                            <i class="fas fa-user-plus mr-2"></i>Register
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="{% url 'register' %}" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-3 sm:px-6 rounded-full transition duration-300 transform hover:scale-105 text-xs sm:text-base">
+                            <i class="fas fa-user-plus mr-1 sm:mr-2"></i><span class="hidden xs:inline">Register</span>
                         </a>
-                        <a href="{% url 'login' %}" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-6 rounded-full transition duration-300 transform hover:scale-105">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        <a href="{% url 'login' %}" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-3 sm:px-6 rounded-full transition duration-300 transform hover:scale-105 text-xs sm:text-base">
+                            <i class="fas fa-sign-in-alt mr-1 sm:mr-2"></i><span class="hidden xs:inline">Login</span>
                         </a>
                     </div>
                 </div>
@@ -56,14 +56,14 @@
 
         <main class="pt-20">
             <!-- Hero Section -->
-            <section class="container mx-auto px-4 py-16">
+            <section class="container mx-auto px-4 py-8 sm:py-16">
                 <div class="text-center max-w-4xl mx-auto">
-                    <h2 class="text-5xl font-bold text-tertiary mb-6 leading-tight">
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-tertiary mb-4 sm:mb-6 leading-tight">
                         <span class="block">Empowering Youth Leadership</span>
-                        <span class="block text-3xl text-quaternary mt-2">Through Efficient Budget Management</span>
+                        <span class="block text-xl sm:text-2xl md:text-3xl text-quaternary mt-2">Through Efficient Budget Management</span>
                     </h2>
-                    <p class="text-xl text-gray-700 mb-10 max-w-2xl mx-auto">Transform your SK projects with our comprehensive budget management system. Track, manage, and report with ease.</p>
-                    <a href="{% url 'register' %}" class="inline-block bg-tertiary hover:bg-quaternary text-white font-bold py-4 px-8 rounded-full text-xl transition duration-300 transform hover:scale-105 hover:shadow-lg">
+                    <p class="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-10 max-w-2xl mx-auto">Transform your SK projects with our comprehensive budget management system. Track, manage, and report with ease.</p>
+                    <a href="{% url 'register' %}" class="inline-block bg-tertiary hover:bg-quaternary text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-base sm:text-xl transition duration-300 transform hover:scale-105 hover:shadow-lg">
                         <i class="fas fa-rocket mr-2"></i>Get Started Today
                     </a>
                 </div>
@@ -72,11 +72,11 @@
             <!-- Features Section -->
 
             <!-- Recently Completed Projects Section -->
-            <section class="container mx-auto px-4 py-16">
-                <h2 class="text-4xl font-bold text-tertiary mb-12 text-center">
+            <section class="container mx-auto px-4 py-8 sm:py-16">
+                <h2 class="text-3xl sm:text-4xl font-bold text-tertiary mb-6 sm:mb-12 text-center">
                     <i class="fas fa-trophy mr-2"></i>Recently Completed Projects
                 </h2>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                     {% for project in completed_projects %}
                     <div class="glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl">
                         <div class="h-56 bg-tertiary relative overflow-hidden">
@@ -142,13 +142,13 @@
             </section>
 
             <!-- Call to Action Section -->
-            <section class="container mx-auto px-4 py-16 text-center">
-                <div class="glass-effect rounded-3xl p-12 max-w-4xl mx-auto">
-                    <h2 class="text-3xl font-bold text-tertiary mb-6">
+            <section class="container mx-auto px-4 py-8 sm:py-16 text-center">
+                <div class="glass-effect rounded-3xl p-6 sm:p-12 max-w-4xl mx-auto">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-tertiary mb-4 sm:mb-6">
                         <i class="fas fa-handshake mr-2"></i>Join the SK Budget Community
                     </h2>
-                    <p class="text-xl text-gray-700 mb-8">Start making a difference in your community today</p>
-                    <a href="{% url 'register' %}" class="inline-block bg-tertiary hover:bg-quaternary text-white font-bold py-4 px-8 rounded-full text-xl transition duration-300 transform hover:scale-105 hover:shadow-lg">
+                    <p class="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8">Start making a difference in your community today</p>
+                    <a href="{% url 'register' %}" class="inline-block bg-tertiary hover:bg-quaternary text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-base sm:text-xl transition duration-300 transform hover:scale-105 hover:shadow-lg">
                         <i class="fas fa-user-plus mr-2"></i>Sign Up Now
                     </a>
                 </div>

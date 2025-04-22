@@ -19,49 +19,49 @@
         {% endif %}
 
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
             <!-- Cards Section -->
              {% include "cards_section.html" %}
-             
+
 
         </div>
       <!-- Projects Section -->
-        <div class="mt-12">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-3xl font-bold text-tertiary">Projects</h3>
-                <button onclick="openProjectModal()" class="bg-tertiary text-white px-6 py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg flex items-center">
+        <div class="mt-8 sm:mt-12">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <h3 class="text-2xl sm:text-3xl font-bold text-tertiary">Projects</h3>
+                <button onclick="openProjectModal()" class="bg-tertiary text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg flex items-center text-sm sm:text-base">
                     <i class="fas fa-plus mr-2"></i>Add New Project
                 </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                 {% for project in projects %}
                     <div class="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 {% if project.budget_utilized %}border-2 border-red-500{% endif %}">
-                        <div class="bg-gradient-to-r from-tertiary to-quaternary text-white p-6">
-                            <h4 class="text-2xl font-semibold">{{ project.name }}</h4>
+                        <div class="bg-gradient-to-r from-tertiary to-quaternary text-white p-4 sm:p-6">
+                            <h4 class="text-xl sm:text-2xl font-semibold">{{ project.name }}</h4>
                         </div>
-                        <div class="p-6">
-                            <p class="text-sm text-gray-600 mb-6">{{ project.description|truncatechars:100 }}</p>
-                            <div class="grid grid-cols-3 gap-4 text-sm mb-6">
-                                <div class="bg-gray-100 p-3 rounded-lg">
-                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-money-bill-wave mr-2"></i>Budget</p>
-                                    <p class="text-lg">₱{{ project.allocated_budget|intcomma }}</p>
+                        <div class="p-4 sm:p-6">
+                            <p class="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">{{ project.description|truncatechars:100 }}</p>
+                            <div class="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm mb-4 sm:mb-6">
+                                <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-money-bill-wave mr-1 sm:mr-2"></i>Budget</p>
+                                    <p class="text-sm sm:text-lg">₱{{ project.allocated_budget|intcomma }}</p>
                                 </div>
-                                <div class="bg-gray-100 p-3 rounded-lg">
-                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-receipt mr-2"></i>Expenses</p>
-                                    <p class="text-lg">₱{{ project.total_expenses|intcomma }}</p>
+                                <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-receipt mr-1 sm:mr-2"></i>Expenses</p>
+                                    <p class="text-sm sm:text-lg">₱{{ project.total_expenses|intcomma }}</p>
                                 </div>
-                                <div class="bg-gray-100 p-3 rounded-lg">
-                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-piggy-bank mr-2"></i>Remaining</p>
-                                    <p class="text-lg">₱{{ project.remaining_budget|intcomma }}</p>
+                                <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-piggy-bank mr-1 sm:mr-2"></i>Remaining</p>
+                                    <p class="text-sm sm:text-lg">₱{{ project.remaining_budget|intcomma }}</p>
                                 </div>
                             </div>
-                            <div class="flex justify-between text-sm mb-6">
+                            <div class="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-sm mb-4 sm:mb-6 space-y-2 sm:space-y-0">
                                 <div>
-                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-calendar-alt mr-2"></i>Start Date</p>
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-calendar-alt mr-1 sm:mr-2"></i>Start Date</p>
                                     <p>{{ project.start_date }}</p>
                                 </div>
-                                <div>
-                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-flag-checkered mr-2"></i>End Date</p>
+                                <div class="sm:text-right">
+                                    <p class="font-semibold text-tertiary mb-1"><i class="fas fa-flag-checkered mr-1 sm:mr-2"></i>End Date</p>
                                     <p>{{ project.end_date }}</p>
                                 </div>
                             </div>
@@ -73,28 +73,28 @@
                                 </div>
                             {% endif %}
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <a href="{% url 'add_expense' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
-                                    <i class="fas fa-plus-circle mr-2"></i>Add Expense
+                            <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                                <a href="{% url 'add_expense' project.id %}" class="bg-tertiary text-white px-2 sm:px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-xs sm:text-sm font-medium">
+                                    <i class="fas fa-plus-circle mr-1 sm:mr-2"></i><span class="hidden xs:inline">Add</span> Expense
                                 </a>
-                                <a href="{% url 'project_detail' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
-                                    <i class="fas fa-eye mr-2"></i>View Details
+                                <a href="{% url 'project_detail' project.id %}" class="bg-tertiary text-white px-2 sm:px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-xs sm:text-sm font-medium">
+                                    <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden xs:inline">View</span> Details
                                 </a>
-                                <a href="{% url 'edit_project' project.id %}" class="bg-tertiary text-white px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-sm font-medium">
-                                    <i class="fas fa-edit mr-2"></i>Edit Project
+                                <a href="{% url 'edit_project' project.id %}" class="bg-tertiary text-white px-2 sm:px-4 py-2 rounded-lg hover:bg-quaternary transition duration-300 flex items-center justify-center text-xs sm:text-sm font-medium">
+                                    <i class="fas fa-edit mr-1 sm:mr-2"></i><span class="hidden xs:inline">Edit</span> Project
                                 </a>
-                                <button onclick="confirmDelete({{ project.id }})" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 flex items-center justify-center text-sm font-medium">
-                                    <i class="fas fa-trash-alt mr-2"></i>Delete Project
+                                <button onclick="confirmDelete({{ project.id }})" class="bg-red-500 text-white px-2 sm:px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 flex items-center justify-center text-xs sm:text-sm font-medium">
+                                    <i class="fas fa-trash-alt mr-1 sm:mr-2"></i><span class="hidden xs:inline">Delete</span> Project
                                 </button>
                             </div>
                         </div>
                     </div>
                 {% empty %}
-                    <div class="col-span-3 text-center py-12 bg-gray-100 rounded-xl">
-                        <i class="fas fa-project-diagram text-6xl text-gray-400 mb-4"></i>
-                        <p class="text-2xl text-gray-500 mb-4">No projects yet.</p>
-                        <p class="text-lg text-tertiary">Create your first project to get started!</p>
-                        <button onclick="openProjectModal()" class="mt-6 bg-tertiary text-white px-6 py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg inline-flex items-center">
+                    <div class="col-span-3 text-center py-8 sm:py-12 bg-gray-100 rounded-xl">
+                        <i class="fas fa-project-diagram text-4xl sm:text-6xl text-gray-400 mb-4"></i>
+                        <p class="text-xl sm:text-2xl text-gray-500 mb-2 sm:mb-4">No projects yet.</p>
+                        <p class="text-base sm:text-lg text-tertiary">Create your first project to get started!</p>
+                        <button onclick="openProjectModal()" class="mt-4 sm:mt-6 bg-tertiary text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full hover:bg-quaternary transition duration-300 transform hover:scale-105 shadow-lg inline-flex items-center text-sm sm:text-base">
                             <i class="fas fa-plus mr-2"></i>Add New Project
                         </button>
                     </div>
