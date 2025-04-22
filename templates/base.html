@@ -22,16 +22,31 @@
             }
         </script>
     </head>
-    <body class="bg-secondary">
-        <div class="flex h-screen">
-        <!-- Sidebar -->
-            <aside class="w-64 bg-tertiary text-white flex flex-col">
+    <body class="bg-secondary min-h-screen">
+        <!-- Mobile Menu Button -->
+        <div class="lg:hidden fixed top-0 left-0 z-50 w-full bg-tertiary p-4 flex justify-between items-center">
+            <div class="flex items-center">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                {% else %}
+                    <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                {% endif %}
+                <span class="text-white font-semibold">{{ user.get_full_name|title }}</span>
+            </div>
+            <button id="mobile-menu-button" class="text-white focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row min-h-screen pt-16 lg:pt-0">
+            <!-- Sidebar - Hidden on mobile by default -->
+            <aside id="sidebar" class="hidden lg:flex w-full lg:w-64 bg-tertiary text-white flex-col fixed lg:sticky top-0 left-0 h-full z-40 lg:z-0 overflow-y-auto transition-all duration-300 transform -translate-x-full lg:translate-x-0">
                 <div class="p-4 flex flex-col items-center">
                     <a href="{% url 'edit_profile' %}" class="mb-3 relative">
                         {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-24 h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
+                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
                         {% else %}
-                            <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-24 h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
+                            <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
                         {% endif %}
                         <i class="fas fa-pencil-alt absolute bottom-0 right-0 bg-quaternary text-white p-2 rounded-full"></i>
                     </a>
@@ -44,51 +59,80 @@
                     </div>
                 </div>
                 <nav class="mt-6 flex-grow">
-
                     {% if user.is_superuser %}
                         <a href="{% url 'admin_dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-user-shield mr-3 text-xl"></i> <span class="text-lg">Admin Dashboard</span>
+                            <i class="fas fa-user-shield mr-3 text-xl"></i> <span class="text-base md:text-lg">Admin Dashboard</span>
                         </a>
                         <a href="{% url 'user_approval' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'user_approval' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-user-check mr-3 text-xl"></i> <span class="text-lg">User Approval</span>
+                            <i class="fas fa-user-check mr-3 text-xl"></i> <span class="text-base md:text-lg">User Approval</span>
                         </a>
-                    {% else%}
-
+                    {% else %}
                         <a href="{% url 'dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-home mr-3 text-xl"></i> <span class="text-lg">Dashboard</span>
+                            <i class="fas fa-home mr-3 text-xl"></i> <span class="text-base md:text-lg">Dashboard</span>
                         </a>
-
-
                         <a href="{% url 'all_projects' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_projects' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-project-diagram mr-3 text-xl"></i> <span class="text-lg">Projects</span>
+                            <i class="fas fa-project-diagram mr-3 text-xl"></i> <span class="text-base md:text-lg">Projects</span>
                         </a>
-
-
                         <a href="{% url 'all_expenses' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_expenses' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-receipt mr-3 text-xl"></i> <span class="text-lg">All Expenses</span>
+                            <i class="fas fa-receipt mr-3 text-xl"></i> <span class="text-base md:text-lg">All Expenses</span>
                         </a>
-
-
                         <a href="{% url 'export_pdf_report' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'export_pdf_report' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-file-pdf mr-3 text-xl"></i> <span class="text-lg">Export PDF Report</span>
+                            <i class="fas fa-file-pdf mr-3 text-xl"></i> <span class="text-base md:text-lg">Export PDF Report</span>
                         </a>
                     {% endif %}
                 </nav>
-
-
                 <div class="p-4 mt-auto">
-
-
                     <a href="{% url 'logout' %}" class="block py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center flex items-center justify-center">
-                        <i class="fas fa-sign-out-alt mr-3 text-xl"></i> <span class="text-lg font-semibold">Logout</span>
+                        <i class="fas fa-sign-out-alt mr-3 text-xl"></i> <span class="text-base md:text-lg font-semibold">Logout</span>
                     </a>
                 </div>
             </aside>
-        <!-- Main Content -->
-            <main class="flex-1 p-8 overflow-y-auto">
+            <!-- Main Content -->
+            <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
                 {% block content %}
                 {% endblock %}
             </main>
         </div>
+
+        <!-- JavaScript for mobile menu toggle -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const sidebar = document.getElementById('sidebar');
+
+                if (mobileMenuButton && sidebar) {
+                    mobileMenuButton.addEventListener('click', function() {
+                        sidebar.classList.toggle('hidden');
+                        sidebar.classList.toggle('-translate-x-full');
+                        sidebar.classList.toggle('translate-x-0');
+                    });
+
+                    // Close sidebar when clicking outside on mobile
+                    document.addEventListener('click', function(event) {
+                        const isClickInsideSidebar = sidebar.contains(event.target);
+                        const isClickOnMenuButton = mobileMenuButton.contains(event.target);
+
+                        if (!isClickInsideSidebar && !isClickOnMenuButton && window.innerWidth < 1024 && !sidebar.classList.contains('hidden')) {
+                            sidebar.classList.add('hidden');
+                            sidebar.classList.add('-translate-x-full');
+                            sidebar.classList.remove('translate-x-0');
+                        }
+                    });
+
+                    // Handle window resize
+                    window.addEventListener('resize', function() {
+                        if (window.innerWidth >= 1024) {
+                            sidebar.classList.remove('hidden');
+                            sidebar.classList.remove('-translate-x-full');
+                            sidebar.classList.add('translate-x-0');
+                        } else {
+                            sidebar.classList.add('hidden');
+                            sidebar.classList.add('-translate-x-full');
+                            sidebar.classList.remove('translate-x-0');
+                        }
+                    });
+                }
+            });
+        </script>
     </body>
 </html>
