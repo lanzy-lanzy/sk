@@ -6,7 +6,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.utils import timezone
 from decimal import Decimal
 from reportlab.lib import colors
@@ -22,7 +22,7 @@ from io import BytesIO
 from datetime import datetime
 import os
 from django.conf import settings
-from .models import MainBudget, Project, User, Expense, AccomplishmentReportImage
+from .models import MainBudget, Project, User, Expense, AccomplishmentReportImage, AccomplishmentReport
 from .forms import (
     MainBudgetForm,
     ProjectForm,
@@ -357,7 +357,13 @@ def all_expenses(request):
 
 @login_required
 def project_accomplishment_report(request, project_id):
-    project = get_object_or_404(Project, id=project_id, chairman=request.user)
+    # For admin users, allow viewing any project's accomplishment reports
+    # For chairmen, only allow viewing their own projects' accomplishment reports
+    if request.user.is_superuser:
+        project = get_object_or_404(Project, id=project_id)
+    else:
+        project = get_object_or_404(Project, id=project_id, chairman=request.user)
+
     accomplishment_reports = project.accomplishment_reports.all().order_by('-report_date')
 
     context = {
@@ -574,11 +580,11 @@ def generate_pdf_report(response, user, projects):
 @login_required
 def export_project_pdf(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-    
+
     # Create response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{project.name.replace(" ", "_")}_report.pdf"'
-    
+
     # Create the PDF object using ReportLab with A4 size
     doc = SimpleDocTemplate(
         response,
@@ -588,7 +594,7 @@ def export_project_pdf(request, project_id):
         topMargin=36,
         bottomMargin=36
     )
-    
+
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
         'CustomTitle',
@@ -599,14 +605,14 @@ def export_project_pdf(request, project_id):
         spaceAfter=30,
         alignment=TA_CENTER,
     )
-    
+
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
         fontName='Helvetica',
         fontSize=11,
     )
-    
+
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
@@ -615,9 +621,9 @@ def export_project_pdf(request, project_id):
         textColor=colors.HexColor('#1a5f7a'),
         spaceAfter=20,
     )
-    
+
     elements = []
-    
+
     # Title
     elements.append(Paragraph(project.name, title_style))
     elements.append(HRFlowable(
@@ -637,7 +643,7 @@ def export_project_pdf(request, project_id):
         ["Status", project.get_status_display()],
         ["Description", project.description]
     ]
-    
+
     overview_table = Table(overview_data, colWidths=[100, 400])
     overview_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
@@ -656,7 +662,7 @@ def export_project_pdf(request, project_id):
         ["Total Expenses", f"PHP {project.total_expenses():,.2f}"],
         ["Remaining Budget", f"PHP {project.remaining_budget:,.2f}"]
     ]
-    
+
     budget_table = Table(budget_data, colWidths=[100, 400])
     budget_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
@@ -679,7 +685,7 @@ def export_project_pdf(request, project_id):
                 f"PHP {expense.amount:,.2f}",
                 expense.description
             ])
-        
+
         expense_table = Table(expense_data, colWidths=[80, 100, 100, 220])
         expense_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
@@ -698,12 +704,12 @@ def export_project_pdf(request, project_id):
     accomplishment_reports = project.accomplishment_reports.all()
     if accomplishment_reports.exists():
         elements.append(Paragraph("Project Images", heading_style))
-        
+
         for report in accomplishment_reports:
             if report.report_images.exists():
                 elements.append(Paragraph(f"Report Date: {report.report_date.strftime('%B %d, %Y')}", normal_style))
                 elements.append(Spacer(1, 10))
-                
+
                 for img in report.report_images.all():
                     try:
                         # Get the full path of the image
@@ -723,7 +729,7 @@ def export_project_pdf(request, project_id):
 
     # Add signature section
     elements.append(PageBreak())
-    
+
     # Add logo
     logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')  # Adjust path as needed
     if os.path.exists(logo_path):
@@ -731,9 +737,9 @@ def export_project_pdf(request, project_id):
         logo.drawWidth = 150
         logo.drawHeight = 150
         elements.append(logo)
-    
+
     elements.append(Spacer(1, 3*inch))  # Adjust space between logo and signature
-    
+
     # Report Date
     date_style = ParagraphStyle(
         'DateStyle',
@@ -743,7 +749,7 @@ def export_project_pdf(request, project_id):
     )
     elements.append(Paragraph(f"Report Date: {timezone.now().strftime('%B %d, %Y')}", date_style))
     elements.append(Spacer(1, 2*inch))
-    
+
     # Signature line and details
     signature_data = [
         [Paragraph("Certified Correct:", normal_style)],
@@ -752,7 +758,7 @@ def export_project_pdf(request, project_id):
         [Paragraph(f"<b>{project.chairman.get_full_name().upper()}</b>", normal_style)],
         [Paragraph("SK Chairman", normal_style)]
     ]
-    
+
     signature_table = Table(signature_data, colWidths=[4*inch])
     signature_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -760,13 +766,13 @@ def export_project_pdf(request, project_id):
         ('TOPPADDING', (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
-    
+
     # Center the signature table on A4 page
     signature_wrapper = Table([[signature_table]], colWidths=[A4[0]-72])  # 72 points = 1 inch margins
     signature_wrapper.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
     ]))
-    
+
     elements.append(signature_wrapper)
 
     # Build PDF
@@ -848,7 +854,7 @@ def admin_dashboard(request):
     year = request.GET.get('year')
 
     # Initialize queryset for projects and budgets
-    projects = Project.objects.all()
+    projects = Project.objects.all().prefetch_related('accomplishment_reports__report_images')
     main_budgets = MainBudget.objects.all()
 
     # Get users pending approval

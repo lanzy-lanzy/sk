@@ -290,6 +290,8 @@
                     <div class="h-40 bg-tertiary relative overflow-hidden">
                         {% if project.image %}
                             <img src="{{ project.image.url }}" alt="{{ project.name }}" class="w-full h-full object-cover">
+                        {% elif project.latest_image %}
+                            <img src="{{ project.latest_image.url }}" alt="{{ project.name }}" class="w-full h-full object-cover">
                         {% else %}
                             <div class="w-full h-full flex items-center justify-center bg-quaternary/80">
                                 <i class="fas fa-project-diagram text-5xl text-white opacity-50"></i>
