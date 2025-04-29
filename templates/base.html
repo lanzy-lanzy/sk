@@ -26,12 +26,36 @@
         <!-- Mobile Menu Button -->
         <div class="lg:hidden fixed top-0 left-0 z-50 w-full bg-tertiary p-4 flex justify-between items-center">
             <div class="flex items-center">
-                {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                {% if user.is_superuser %}
+                <a href="{% url 'edit_profile' %}" class="relative">
+                    {% if user.logo %}
+                        <img src="{{ user.logo.url }}" alt="Organization Logo" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                    {% elif user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                    {% else %}
+                        <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                    {% endif %}
+                    <div class="absolute -bottom-1 -right-1 bg-yellow-400 text-tertiary p-0.5 rounded-full shadow-md">
+                        <i class="fas fa-crown text-xs"></i>
+                    </div>
+                </a>
+                <div class="flex flex-col">
+                    <span class="text-white font-semibold">Sk Federated</span>
+                    <span class="text-xs text-yellow-400">Administrator</span>
+                </div>
                 {% else %}
-                    <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                <div class="relative">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                    {% else %}
+                        <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-10 h-10 rounded-full border-2 border-quaternary mr-3">
+                    {% endif %}
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-white font-semibold">{{ user.get_full_name|title }}</span>
+                    <span class="text-xs text-quaternary">{{ user_address|default:user.address|default:"" }}</span>
+                </div>
                 {% endif %}
-                <span class="text-white font-semibold">{{ user.get_full_name|title }}</span>
             </div>
             <button id="mobile-menu-button" class="text-white focus:outline-none">
                 <i class="fas fa-bars text-2xl"></i>
@@ -40,50 +64,203 @@
 
         <div class="flex flex-col lg:flex-row min-h-screen pt-16 lg:pt-0">
             <!-- Sidebar - Hidden on mobile by default -->
-            <aside id="sidebar" class="hidden lg:flex w-full lg:w-64 bg-tertiary text-white flex-col fixed lg:sticky top-0 left-0 h-full z-40 lg:z-0 overflow-y-auto transition-all duration-300 transform -translate-x-full lg:translate-x-0">
-                <div class="p-4 flex flex-col items-center">
-                    <a href="{% url 'edit_profile' %}" class="mb-3 relative">
-                        {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
-                        {% else %}
-                            <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-quaternary hover:border-primary transition-colors duration-200">
-                        {% endif %}
-                        <i class="fas fa-pencil-alt absolute bottom-0 right-0 bg-quaternary text-white p-2 rounded-full"></i>
+            <aside id="sidebar" class="hidden lg:flex w-full lg:w-72 bg-tertiary text-white flex-col fixed lg:sticky top-0 left-0 h-full z-40 lg:z-0 overflow-y-auto transition-all duration-300 transform -translate-x-full lg:translate-x-0">
+                {% if user.is_superuser %}
+                <!-- Admin Sidebar -->
+                <div class="p-4 flex flex-col items-center bg-gradient-to-b from-tertiary to-quaternary">
+                    <a href="{% url 'edit_profile' %}" class="mb-3 relative cursor-pointer group">
+                        <div class="relative">
+                            {% if user.logo %}
+                                <img src="{{ user.logo.url }}" alt="Organization Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg group-hover:border-primary transition-all duration-200">
+                            {% elif user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="Admin Profile" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg group-hover:border-primary transition-all duration-200">
+                            {% else %}
+                                <img src="{% static 'img/drr.png' %}" alt="Default Admin Profile" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg group-hover:border-primary transition-all duration-200">
+                            {% endif %}
+                            <div class="absolute -bottom-1 -right-1 bg-yellow-400 text-tertiary p-1 rounded-full shadow-md">
+                                <i class="fas fa-crown text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all duration-300">
+                            <i class="fas fa-pencil-alt text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></i>
+                        </div>
                     </a>
-                    <div class="text-center relative">
-                        <h2 class="text-lg font-semibold">{{ user.get_full_name|title }}</h2>
-                        <p class="text-xs text-gray-300">{{ user.address|truncatechars:20|capfirst }}</p>
-                        <a href="{% url 'edit_profile' %}" class="absolute -right-6 top-0">
-                            <i class="fas fa-pencil-alt text-quaternary hover:text-primary transition-colors duration-200"></i>
-                        </a>
+                    <div class="text-center">
+                        <h2 class="text-xl font-bold text-white">Sk Federated</h2>
+                        <div class="inline-block px-3 py-1 bg-yellow-400 text-tertiary text-xs font-bold rounded-full shadow-md">
+                            Administrator
+                        </div>
                     </div>
                 </div>
-                <nav class="mt-6 flex-grow">
-                    {% if user.is_superuser %}
-                        <a href="{% url 'admin_dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-user-shield mr-3 text-xl"></i> <span class="text-base md:text-lg">Admin Dashboard</span>
+
+                <div class="p-4 bg-tertiary shadow-inner">
+                    <div class="bg-quaternary/20 rounded-lg p-4 mb-4">
+                        <h3 class="text-sm font-semibold text-white/90 mb-3 flex items-center">
+                            <i class="fas fa-user-shield mr-2"></i> Admin Information
+                        </h3>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-start">
+                                <i class="fas fa-envelope mt-1 mr-2 text-yellow-400"></i>
+                                <span>{{ user.email }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-phone-alt mt-1 mr-2 text-yellow-400"></i>
+                                <span>{{ user_contact_number|default:user.contact_number|default:"No contact number" }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-id-badge mt-1 mr-2 text-yellow-400"></i>
+                                <span>{{ user.get_full_name }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-calendar-alt mt-1 mr-2 text-yellow-400"></i>
+                                <span>Term: {{ user_term_of_office|default:user.term_of_office|default:"Not specified" }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt mt-1 mr-2 text-yellow-400"></i>
+                                <span>{{ user_address|default:user.address|default:"No address provided" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-quaternary/20 rounded-lg p-4 mb-4">
+                        <h3 class="text-sm font-semibold text-white/90 mb-3 flex items-center">
+                            <i class="fas fa-tachometer-alt mr-2"></i> System Status
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center">
+                                    <i class="fas fa-user-clock mr-2 text-yellow-400"></i>
+                                    <span>Pending Approvals:</span>
+                                </div>
+                                {% if pending_approvals_count and pending_approvals_count > 0 %}
+                                <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ pending_approvals_count }}</span>
+                                {% else %}
+                                <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users mr-2 text-yellow-400"></i>
+                                    <span>Active Users:</span>
+                                </div>
+                                <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ active_users_count|default:"0" }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <div class="flex items-center">
+                                    <i class="fas fa-project-diagram mr-2 text-yellow-400"></i>
+                                    <span>Total Projects:</span>
+                                </div>
+                                <span class="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ all_projects|length|default:"0" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="flex-grow px-3">
+                    <div class="mb-4">
+                        <h3 class="text-xs uppercase tracking-wider text-gray-300 px-3 mb-2">Administration</h3>
+                        <a href="{% url 'admin_dashboard' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-user-shield text-lg"></i>
+                            </div>
+                            <span class="text-base">Admin Dashboard</span>
                         </a>
-                        <a href="{% url 'user_approval' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'user_approval' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-user-check mr-3 text-xl"></i> <span class="text-base md:text-lg">User Approval</span>
+                        <a href="{% url 'user_approval' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'user_approval' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-user-check text-lg"></i>
+                            </div>
+                            <span class="text-base">User Approval</span>
+                            {% if pending_approvals_count and pending_approvals_count > 0 %}
+                            <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ pending_approvals_count }}</span>
+                            {% endif %}
                         </a>
-                    {% else %}
-                        <a href="{% url 'dashboard' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-home mr-3 text-xl"></i> <span class="text-base md:text-lg">Dashboard</span>
+                        <a href="{% url 'generate_registration_code' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'generate_registration_code' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-key text-lg"></i>
+                            </div>
+                            <span class="text-base">Registration Codes</span>
                         </a>
-                        <a href="{% url 'all_projects' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_projects' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-project-diagram mr-3 text-xl"></i> <span class="text-base md:text-lg">Projects</span>
-                        </a>
-                        <a href="{% url 'all_expenses' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_expenses' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-receipt mr-3 text-xl"></i> <span class="text-base md:text-lg">All Expenses</span>
-                        </a>
-                        <a href="{% url 'export_pdf_report' %}" class="block py-3 px-6 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'export_pdf_report' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 mx-2 flex items-center">
-                            <i class="fas fa-file-pdf mr-3 text-xl"></i> <span class="text-base md:text-lg">Export PDF Report</span>
-                        </a>
-                    {% endif %}
+                    </div>
                 </nav>
-                <div class="p-4 mt-auto">
-                    <a href="{% url 'logout' %}" class="block py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center flex items-center justify-center">
-                        <i class="fas fa-sign-out-alt mr-3 text-xl"></i> <span class="text-base md:text-lg font-semibold">Logout</span>
+
+                {% else %}
+                <!-- Regular User Sidebar -->
+                <div class="p-4 flex flex-col items-center bg-gradient-to-b from-tertiary to-quaternary">
+                    <div class="mb-3 relative">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg">
+                        {% else %}
+                            <img src="{% static 'img/drr.png' %}" alt="Default Profile Picture" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg">
+                        {% endif %}
+                    </div>
+                    <div class="text-center">
+                        <h2 class="text-xl font-bold text-white">{{ user.get_full_name|title }}</h2>
+                        <span class="px-3 py-1 bg-primary text-tertiary text-xs font-bold rounded-full shadow-md">SK Chairman</span>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-tertiary shadow-inner">
+                    <div class="bg-quaternary/20 rounded-lg p-3 mb-4">
+                        <h3 class="text-sm font-semibold text-white/80 mb-2 flex items-center">
+                            <i class="fas fa-user-circle mr-2"></i> User Information
+                        </h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-start">
+                                <i class="fas fa-map-marker-alt mt-1 mr-2 text-quaternary"></i>
+                                <span id="user-address-display">{{ user_address|default:user.address|default:"No address provided" }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-phone-alt mt-1 mr-2 text-quaternary"></i>
+                                <span>{{ user_contact_number|default:user.contact_number|default:"No contact number" }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-calendar-alt mt-1 mr-2 text-quaternary"></i>
+                                <span>Term: {{ user_term_of_office|default:user.term_of_office|default:"Not specified" }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Debug information -->
+                        <script>
+                            console.log("User address from context: {{ user_address|escapejs }}");
+                            console.log("User address from user object: {{ user.address|escapejs }}");
+                        </script>
+                    </div>
+                </div>
+
+                <nav class="flex-grow px-3">
+                    <div class="mb-4">
+                        <h3 class="text-xs uppercase tracking-wider text-gray-300 px-3 mb-2">Main Navigation</h3>
+                        <a href="{% url 'dashboard' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-home text-lg"></i>
+                            </div>
+                            <span class="text-base">Dashboard</span>
+                        </a>
+                        <a href="{% url 'all_projects' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_projects' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-project-diagram text-lg"></i>
+                            </div>
+                            <span class="text-base">Projects</span>
+                        </a>
+                        <a href="{% url 'all_expenses' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'all_expenses' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-receipt text-lg"></i>
+                            </div>
+                            <span class="text-base">All Expenses</span>
+                        </a>
+                        <a href="{% url 'export_pdf_report' %}" class="block py-3 px-4 hover:bg-quaternary transition-colors duration-200 {% if request.resolver_match.url_name == 'export_pdf_report' %}bg-quaternary text-primary font-bold{% endif %} rounded-lg mb-2 flex items-center group">
+                            <div class="bg-quaternary/30 p-2 rounded-lg mr-3 group-hover:bg-quaternary/50 transition-colors duration-200">
+                                <i class="fas fa-file-pdf text-lg"></i>
+                            </div>
+                            <span class="text-base">Export PDF Report</span>
+                        </a>
+                    </div>
+                </nav>
+                {% endif %}
+
+                <div class="p-4 mt-auto border-t border-quaternary/30">
+                    <a href="{% url 'logout' %}" class="block py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-center flex items-center justify-center shadow-md">
+                        <i class="fas fa-sign-out-alt mr-3 text-xl"></i> <span class="text-base font-semibold">Logout</span>
                     </a>
                 </div>
             </aside>

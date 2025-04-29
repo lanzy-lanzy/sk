@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit User - SK Budget{% endblock %}
+
+{% block content %}
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-tertiary">
+                <i class="fas fa-user-edit mr-2"></i>Edit User: {{ user_being_edited.username }}
+            </h1>
+            <a href="{% url 'user_approval' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-300 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Back to User List
+            </a>
+        </div>
+
+        {% if messages %}
+            <div id="messages-container" class="mb-6">
+                {% for message in messages %}
+                    <div class="message {% if message.tags == 'success' %}bg-green-100 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-500 text-red-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %} border-l-4 p-4 mb-4 rounded-r" role="alert">
+                        <p class="font-bold">{{ message.tags|title }}</p>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <!-- Username -->
+                    <div class="relative">
+                        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.username }}
+                        </div>
+                        {% if form.username.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.username.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="relative">
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <div class="relative">
+                            <i class="fas fa-envelope absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.email }}
+                        </div>
+                        {% if form.email.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.email.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="relative">
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.first_name }}
+                        </div>
+                        {% if form.first_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="relative">
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.last_name }}
+                        </div>
+                        {% if form.last_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="relative">
+                        <label for="{{ form.date_of_birth.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                        <div class="relative">
+                            <i class="fas fa-calendar-alt absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.date_of_birth }}
+                        </div>
+                        {% if form.date_of_birth.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.date_of_birth.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Gender -->
+                    <div class="relative">
+                        <label for="{{ form.gender.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <div class="relative">
+                            <i class="fas fa-venus-mars absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.gender }}
+                        </div>
+                        {% if form.gender.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.gender.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contact Number -->
+                    <div class="relative">
+                        <label for="{{ form.contact_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.contact_number }}
+                        </div>
+                        {% if form.contact_number.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.contact_number.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Term of Office -->
+                    <div class="relative">
+                        <label for="{{ form.term_of_office.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Term of Office</label>
+                        <div class="relative">
+                            <i class="fas fa-calendar-week absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.term_of_office }}
+                        </div>
+                        {% if form.term_of_office.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.term_of_office.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Address -->
+                    <div class="relative">
+                        <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                        <div class="relative">
+                            <i class="fas fa-map-marker-alt absolute top-3 left-3 text-gray-400"></i>
+                            {{ form.address }}
+                        </div>
+                        {% if form.address.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.address.errors|join:", " }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Approval Status -->
+                    <div class="relative mt-4">
+                        <div class="flex items-center">
+                            {{ form.is_approved }}
+                            <label for="{{ form.is_approved.id_for_label }}" class="ml-2 block text-sm font-medium text-gray-700">
+                                Approved
+                            </label>
+                        </div>
+                        {% if form.is_approved.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.is_approved.errors|join:", " }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">Check this box to approve the user.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Profile Picture Preview -->
+            <div class="mt-6 border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">User Profile</h3>
+                <div class="flex items-center space-x-4">
+                    {% if user_being_edited.profile_picture %}
+                        <img src="{{ user_being_edited.profile_picture.url }}" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover border-4 border-tertiary">
+                    {% else %}
+                        <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-tertiary">
+                            <i class="fas fa-user text-gray-400 text-4xl"></i>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user_being_edited.logo %}
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-700 mb-1">Organization Logo</p>
+                            <img src="{{ user_being_edited.logo.url }}" alt="Organization Logo" class="h-16 object-contain">
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end mt-8">
+                <button type="submit" class="bg-tertiary hover:bg-quaternary text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 flex items-center">
+                    <i class="fas fa-save mr-2"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Auto-hide messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(function(message) {
+                    message.style.transition = 'opacity 1s';
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.style.display = 'none';
+                    }, 1000);
+                });
+            }, 5000);
+        });
+    </script>
+{% endblock %}

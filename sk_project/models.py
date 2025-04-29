@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum
 from decimal import Decimal
+import uuid
+from django.utils import timezone
 
 class User(AbstractUser):
     """
@@ -10,8 +12,17 @@ class User(AbstractUser):
     """
     is_chairman = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='profile_pics/', default='profile_pics/default_avatar.png', blank=True)
+    logo = models.ImageField(upload_to='logos/', null=True)
     address = models.TextField(blank=True, null=True)
     contact_number = models.CharField(max_length=15, blank=True, null=True)
+    date_of_birth = models.DateField(null=True)
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ]
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True)
+    term_of_office = models.CharField(max_length=20, null=True, help_text='Term of office (e.g., 2023-2026)')
     is_approved = models.BooleanField(default=False, help_text='Designates whether this user has been approved by an admin.')
     groups = models.ManyToManyField(
         Group,
@@ -97,6 +108,7 @@ class Project(models.Model):
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
     image = models.ImageField(upload_to='project_images/%Y/%m/%d/', blank=True, null=True)
+    resolution_document = models.FileField(upload_to='project_resolutions/%Y/%m/%d/', blank=True, null=True, help_text='Attach resolution document for this project')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -190,3 +202,44 @@ class Profile(models.Model):
 
     class Meta:
         verbose_name_plural = "Profiles"
+
+class RegistrationCode(models.Model):
+    """
+    Model to store registration codes that users must enter before registering.
+    """
+    code = models.CharField(max_length=20, unique=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_codes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_used = models.BooleanField(default=False)
+    used_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='used_code')
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.code
+
+    def is_valid(self):
+        """Check if the code is valid (not used and not expired)"""
+        if self.is_used:
+            return False
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True
+
+    @classmethod
+    def generate_code(cls, created_by, expires_in_days=None):
+        """Generate a new registration code"""
+        # Generate a random code
+        code = str(uuid.uuid4())[:8].upper()
+
+        # Set expiration date if provided
+        expires_at = None
+        if expires_in_days:
+            expires_at = timezone.now() + timezone.timedelta(days=expires_in_days)
+
+        # Create and return the new code
+        return cls.objects.create(
+            code=code,
+            created_by=created_by,
+            expires_at=expires_at
+        )

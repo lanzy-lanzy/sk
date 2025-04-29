@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, MainBudget, Project, Expense, AccomplishmentReport, Profile
+from .models import User, MainBudget, Project, Expense, AccomplishmentReport, Profile, RegistrationCode
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
@@ -99,3 +99,19 @@ class ProfileAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" width="50" height="50" style="border-radius:50%;"/>', obj.profile_picture.url)
         return "-"
     get_profile_picture.short_description = 'Profile Picture'
+
+
+@admin.register(RegistrationCode)
+class RegistrationCodeAdmin(admin.ModelAdmin):
+    """
+    Admin interface for the RegistrationCode model.
+    """
+    list_display = ('code', 'created_by', 'created_at', 'expires_at', 'is_used', 'used_by', 'used_at', 'is_valid_code')
+    list_filter = ('is_used', 'created_at', 'expires_at')
+    search_fields = ('code', 'created_by__username', 'used_by__username')
+    readonly_fields = ('created_at', 'used_at')
+
+    def is_valid_code(self, obj):
+        return obj.is_valid()
+    is_valid_code.short_description = 'Is Valid'
+    is_valid_code.boolean = True

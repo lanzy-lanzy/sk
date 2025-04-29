@@ -33,4 +33,6 @@ urlpatterns = [
     path('project/<int:project_id>/export-pdf/', views.export_project_pdf, name='export_project_pdf'),
     path('approve-user/<int:user_id>/', views.approve_user, name='approve_user'),
     path('reject-user/<int:user_id>/', views.reject_user, name='reject_user'),
+    path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('registration-codes/', views.generate_registration_code, name='generate_registration_code'),
 ]

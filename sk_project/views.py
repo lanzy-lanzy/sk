@@ -22,7 +22,7 @@ from io import BytesIO
 from datetime import datetime
 import os
 from django.conf import settings
-from .models import MainBudget, Project, User, Expense, AccomplishmentReportImage, AccomplishmentReport
+from .models import MainBudget, Project, User, Expense, AccomplishmentReportImage, AccomplishmentReport, RegistrationCode
 from .forms import (
     MainBudgetForm,
     ProjectForm,
@@ -31,7 +31,8 @@ from .forms import (
     CustomUserCreationForm,
     UserProfileForm,
     AccomplishmentReportImageForm,
-    CustomPasswordChangeForm
+    CustomPasswordChangeForm,
+    AdminUserEditForm
 )
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
@@ -72,21 +73,58 @@ def landing_page(request):
 
 def register(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
-            # Don't log in the user automatically - they need approval first
-            messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can log in.')
+            with transaction.atomic():
+                # Create user but don't save password yet
+                user = form.save(commit=False)
 
-            # Check if it's an AJAX request
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': reverse('login'),
-                    'message': 'Your account has been created successfully! Please wait for admin approval before you can log in.'
-                })
-            else:
-                return redirect('login')
+                # Set additional fields
+                user.first_name = form.cleaned_data.get('first_name')
+                user.last_name = form.cleaned_data.get('last_name')
+                user.date_of_birth = form.cleaned_data.get('date_of_birth')
+                user.gender = form.cleaned_data.get('gender')
+                user.contact_number = form.cleaned_data.get('contact_number')
+                user.term_of_office = form.cleaned_data.get('term_of_office')
+                user.address = form.cleaned_data.get('address')
+
+                # Debug information
+                print(f"Saving user with address: {user.address}")
+
+                # Handle file uploads
+                if 'profile_picture' in request.FILES:
+                    user.profile_picture = request.FILES['profile_picture']
+
+                if 'logo' in request.FILES:
+                    user.logo = request.FILES['logo']
+
+                # Save the user with the password
+                user.save()
+
+                # Mark the registration code as used
+                code_value = form.cleaned_data.get('registration_code')
+                try:
+                    reg_code = RegistrationCode.objects.get(code=code_value)
+                    reg_code.is_used = True
+                    reg_code.used_by = user
+                    reg_code.used_at = timezone.now()
+                    reg_code.save()
+                except RegistrationCode.DoesNotExist:
+                    # This shouldn't happen due to form validation, but just in case
+                    pass
+
+                # Don't log in the user automatically - they need approval first
+                messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can log in.')
+
+                # Check if it's an AJAX request
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'redirect_url': reverse('login'),
+                        'message': 'Your account has been created successfully! Please wait for admin approval before you can log in.'
+                    })
+                else:
+                    return redirect('login')
         else:
             # If it's an AJAX request, return form errors as JSON
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -197,6 +235,69 @@ def reject_user(request, user_id):
         messages.success(request, f'User has been rejected and removed from the system.')
     return redirect('user_approval')
 
+@user_passes_test(lambda u: u.is_superuser)
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        form = AdminUserEditForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'User {user.username} has been updated successfully.')
+            return redirect('user_approval')
+        else:
+            messages.error(request, 'There was an error updating the user. Please check the form.')
+    else:
+        form = AdminUserEditForm(instance=user)
+
+    return render(request, 'edit_user.html', {
+        'form': form,
+        'user_being_edited': user
+    })
+
+@user_passes_test(lambda u: u.is_superuser)
+def generate_registration_code(request):
+    """Generate a new registration code for user registration"""
+    # Get active registration codes
+    active_codes = RegistrationCode.objects.filter(
+        Q(is_used=False) & (Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    ).order_by('-created_at')
+
+    if request.method == 'POST':
+        expires_in_days = request.POST.get('expires_in_days')
+
+        # Convert to integer if provided
+        if expires_in_days:
+            try:
+                expires_in_days = int(expires_in_days)
+            except ValueError:
+                expires_in_days = None
+
+        # Generate the code
+        registration_code = RegistrationCode.generate_code(
+            created_by=request.user,
+            expires_in_days=expires_in_days
+        )
+
+        messages.success(request, f'New registration code generated: {registration_code.code}')
+
+        # If it's an AJAX request, return the code as JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'code': registration_code.code,
+                'expires_at': registration_code.expires_at.strftime('%Y-%m-%d %H:%M:%S') if registration_code.expires_at else None
+            })
+
+        # Redirect to the same page to show the new code in the list
+        return redirect('generate_registration_code')
+
+    context = {
+        'active_codes': active_codes
+    }
+
+    return render(request, 'generate_registration_code.html', context)
+
 # Dashboard and Budget Management Views
 
 @login_required
@@ -233,6 +334,10 @@ def dashboard(request):
         'projects_in_progress': projects_in_progress,
         'cumulative_spending': cumulative_spending,
         'budget_utilization': budget_utilization,
+        # User information for sidebar
+        'user_address': request.user.address,
+        'user_contact_number': request.user.contact_number,
+        'user_term_of_office': request.user.term_of_office,
     }
     return render(request, 'dashboard.html', context)
 
@@ -317,7 +422,7 @@ def create_project(request):
     today = datetime.now().date()
 
     if request.method == 'POST':
-        form = ProjectForm(request.POST)
+        form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             # Server-side validation for dates
             start_date = form.cleaned_data['start_date']
@@ -521,7 +626,22 @@ def edit_profile(request):
             # Profile update form was submitted
             profile_form = UserProfileForm(request.POST, request.FILES, instance=request.user)
             if profile_form.is_valid():
-                profile_form.save()
+                user = profile_form.save(commit=False)
+
+                # Handle additional fields for admin users
+                if request.user.is_superuser:
+                    if 'username' in profile_form.cleaned_data:
+                        user.username = profile_form.cleaned_data['username']
+                    if 'date_of_birth' in profile_form.cleaned_data:
+                        user.date_of_birth = profile_form.cleaned_data['date_of_birth']
+                    if 'gender' in profile_form.cleaned_data:
+                        user.gender = profile_form.cleaned_data['gender']
+                    if 'term_of_office' in profile_form.cleaned_data:
+                        user.term_of_office = profile_form.cleaned_data['term_of_office']
+                    if 'logo' in request.FILES:
+                        user.logo = request.FILES['logo']
+
+                user.save()
                 messages.success(request, 'Your profile has been updated successfully!')
                 return redirect('edit_profile')
             password_form = CustomPasswordChangeForm(user=request.user)
@@ -545,7 +665,8 @@ def edit_profile(request):
 
     return render(request, 'edit_profile.html', {
         'form': profile_form,
-        'password_form': password_form
+        'password_form': password_form,
+        'is_admin': request.user.is_superuser
     })
 
 # PDF Export Functionality
@@ -913,7 +1034,7 @@ def delete_expense(request, expense_id):
 def edit_project(request, project_id):
     project = get_object_or_404(Project, id=project_id, chairman=request.user)
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
+        form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             form.save()
             messages.success(request, 'Project updated successfully!')
@@ -948,6 +1069,10 @@ def admin_dashboard(request):
 
     # Get users pending approval
     pending_users = User.objects.filter(is_approved=False, is_superuser=False)
+
+    # Get counts for sidebar
+    pending_approvals_count = pending_users.count()
+    active_users_count = User.objects.filter(is_approved=True, is_superuser=False).count()
 
     # Apply search filters
     if search_query:
@@ -1014,6 +1139,8 @@ def admin_dashboard(request):
         'available_years': available_years,
         'results_count': results_count,
         'pending_users': pending_users,
+        'pending_approvals_count': pending_approvals_count,
+        'active_users_count': active_users_count,
         'search_applied': any([search_query, date_from, date_to, status, min_budget, max_budget, year])
     }
 
