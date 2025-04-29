@@ -74,7 +74,7 @@
         <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-2xl border-t-4 border-tertiary relative z-10 transition-all duration-300 slide-in my-8">
             <h2 class="text-3xl font-bold text-tertiary mb-6 text-center pulse"><i class="fas fa-user-plus mr-2"></i>Register</h2>
             <p class="text-center text-gray-600 mb-4">After registration, your account will need admin approval before you can log in.</p>
-            <form method="post" class="space-y-6" id="registerForm" enctype="multipart/form-data" novalidate>
+            <form method="post" class="space-y-6" id="registerForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -90,6 +90,7 @@
                     {% if form.registration_code.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.registration_code.errors|join:", " }}</p>
                     {% endif %}
+                    <p id="registration-code-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter a registration code.</p>
                     <p class="text-gray-500 text-xs mt-1">Enter the registration code provided by an administrator.</p>
                 </div>
 
@@ -104,6 +105,7 @@
                             {% if form.first_name.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.first_name.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter your first name.</p>
                         </div>
 
                         <!-- Date of Birth -->
@@ -113,6 +115,7 @@
                             {% if form.date_of_birth.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.date_of_birth.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.date_of_birth.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter your date of birth.</p>
                             <p class="text-gray-500 text-xs mt-1">You must be at least 18 years old to register.</p>
                         </div>
 
@@ -123,6 +126,7 @@
                             {% if form.contact_number.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.contact_number.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.contact_number.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter your contact number.</p>
                         </div>
 
                         <!-- Address -->
@@ -147,6 +151,7 @@
                                         <!-- Barangays will be populated via JavaScript -->
                                     </select>
                                 </div>
+                                <p id="id_barangay-error-message" class="text-red-500 text-xs mt-1 hidden">Please select your barangay.</p>
                             </div>
                             {% if form.address.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.address.errors|join:", " }}</p>
@@ -161,9 +166,10 @@
                             {% if form.term_of_office.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.term_of_office.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.term_of_office.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter your term of office.</p>
                         </div>
 
-                        <!-- Profile Picture (Optional) -->
+                        <!-- Profile Picture (Required) -->
                         <div class="relative group">
                             <div class="flex items-center space-x-3">
                                 <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden" id="profilePreviewContainer">
@@ -174,8 +180,9 @@
                                         <i class="fas fa-camera mr-2"></i>
                                         <span>Choose Profile Picture</span>
                                     </label>
-                                    <input type="file" name="{{ form.profile_picture.name }}" id="id_{{ form.profile_picture.name }}" class="hidden" accept="image/*">
-                                    <p class="text-gray-500 text-xs mt-1">Optional. Upload a profile picture.</p>
+                                    <input type="file" name="{{ form.profile_picture.name }}" id="id_{{ form.profile_picture.name }}" class="hidden" accept="image/*" required>
+                                    <p class="text-gray-500 text-xs mt-1">Required. Upload a profile picture.</p>
+                                    <p id="id_{{ form.profile_picture.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please upload your profile picture.</p>
                                 </div>
                             </div>
                             {% if form.profile_picture.errors %}
@@ -193,19 +200,21 @@
                             {% if form.last_name.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.last_name.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter your last name.</p>
                         </div>
 
                         <!-- Gender -->
                         <div class="relative group">
                             <i class="fas fa-venus-mars absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
                             <select name="{{ form.gender.name }}" id="id_{{ form.gender.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.gender.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" required>
-                                {% for value, text in form.fields.gender.choices %}
-                                    <option value="{{ value }}" {% if form.gender.value == value %}selected{% endif %}>{{ text }}</option>
-                                {% endfor %}
+                                <option value="">Select Gender</option>
+                                <option value="male" {% if form.gender.value == "male" %}selected{% endif %}>Male</option>
+                                <option value="female" {% if form.gender.value == "female" %}selected{% endif %}>Female</option>
                             </select>
                             {% if form.gender.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.gender.errors|join:", " }}</p>
                             {% endif %}
+                            <p id="id_{{ form.gender.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please select your gender.</p>
                         </div>
 
                         <!-- Logo (Required) -->
@@ -222,6 +231,7 @@
                                     </label>
                                     <input type="file" name="{{ form.logo.name }}" id="id_{{ form.logo.name }}" class="hidden" accept="image/*" required>
                                     <p class="text-gray-500 text-xs mt-1">Required. Upload your organization logo.</p>
+                                    <p id="id_{{ form.logo.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please upload your organization logo.</p>
                                 </div>
                             </div>
                             {% if form.logo.errors %}
@@ -236,6 +246,7 @@
                     {% if form.username.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.username.errors|join:", " }}</p>
                     {% endif %}
+                    <p id="id_{{ form.username.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter a username.</p>
                     <p class="text-gray-500 text-xs mt-1 username-requirements hidden">Username must be 3-20 characters long and can contain letters, numbers, and underscores.</p>
                 </div>
                 <div class="relative group">
@@ -244,14 +255,21 @@
                     {% if form.email.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.email.errors|join:", " }}</p>
                     {% endif %}
+                    <p id="id_{{ form.email.name }}-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address.</p>
                     <p class="text-gray-500 text-xs mt-1 email-requirements hidden">Please enter a valid email address.</p>
                 </div>
                 <div class="relative group">
                     <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="password" name="{{ form.password1.name }}" id="id_{{ form.password1.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.password1.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Password" required>
+                    <div class="relative">
+                        <input type="password" name="{{ form.password1.name }}" id="id_{{ form.password1.name }}" class="w-full pl-10 pr-10 py-2 rounded-lg border-2 {% if form.password1.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Password" required>
+                        <button type="button" class="toggle-password absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-tertiary focus:outline-none" data-target="id_{{ form.password1.name }}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     {% if form.password1.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.password1.errors|join:", " }}</p>
                     {% endif %}
+                    <p id="password1-error-message" class="text-red-500 text-xs mt-1 hidden">Please enter a password.</p>
                     <div class="password-strength mt-1 hidden">
                         <div class="flex justify-between mb-1">
                             <span class="text-xs">Password strength:</span>
@@ -275,10 +293,16 @@
                 </div>
                 <div class="relative group">
                     <i class="fas fa-lock absolute top-3 left-3 text-gray-400 group-hover:text-tertiary transition-colors duration-300"></i>
-                    <input type="password" name="{{ form.password2.name }}" id="id_{{ form.password2.name }}" class="w-full pl-10 pr-3 py-2 rounded-lg border-2 {% if form.password2.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Confirm Password" required>
+                    <div class="relative">
+                        <input type="password" name="{{ form.password2.name }}" id="id_{{ form.password2.name }}" class="w-full pl-10 pr-10 py-2 rounded-lg border-2 {% if form.password2.errors %}border-red-500{% else %}border-gray-300{% endif %} focus:outline-none focus:border-tertiary transition-all duration-300 bg-gray-50 group-hover:bg-white" placeholder="Confirm Password" required>
+                        <button type="button" class="toggle-password absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-tertiary focus:outline-none" data-target="id_{{ form.password2.name }}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     {% if form.password2.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.password2.errors|join:", " }}</p>
                     {% endif %}
+                    <p id="password2-error-message" class="text-red-500 text-xs mt-1 hidden">Please confirm your password.</p>
                     <p class="text-red-500 text-xs mt-1 password-match-error hidden">Passwords do not match</p>
                 </div>
                 <div id="register-error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -679,11 +703,13 @@
                     const lastName = $('#id_{{ form.last_name.name }}').val().trim();
                     const dateOfBirth = $('#id_{{ form.date_of_birth.name }}').val().trim();
                     const gender = $('#id_{{ form.gender.name }}').val();
+                    console.log('Gender value:', gender); // Debug log
                     const contactNumber = $('#id_{{ form.contact_number.name }}').val().trim();
                     const barangay = $('#id_barangay').val();
                     const address = $('#id_{{ form.address.name }}').val().trim();
                     const termOfOffice = $('#id_{{ form.term_of_office.name }}').val().trim();
-                    const logo = $('#id_{{ form.logo.name }}').val();
+                    const logo = $('#id_{{ form.logo.name }}')[0].files[0];
+                    const profilePicture = $('#id_{{ form.profile_picture.name }}')[0].files[0];
                     const username = $('#id_{{ form.username.name }}').val().trim();
                     const email = $('#id_{{ form.email.name }}').val().trim();
                     const password1 = $('#id_{{ form.password1.name }}').val();
@@ -701,6 +727,26 @@
                             $errorMsg.text('Please enter a registration code.').removeClass('hidden');
                         }
                         isValid = false;
+                    }
+
+                    // Logo validation
+                    if (!logo) {
+                        $('#id_{{ form.logo.name }}').closest('.relative.group').find('label').addClass('border-red-500');
+                        $('#id_{{ form.logo.name }}-error-message').removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        $('#id_{{ form.logo.name }}').closest('.relative.group').find('label').removeClass('border-red-500');
+                        $('#id_{{ form.logo.name }}-error-message').addClass('hidden');
+                    }
+
+                    // Profile picture validation
+                    if (!profilePicture) {
+                        $('#id_{{ form.profile_picture.name }}').closest('.relative.group').find('label').addClass('border-red-500');
+                        $('#id_{{ form.profile_picture.name }}-error-message').removeClass('hidden');
+                        isValid = false;
+                    } else {
+                        $('#id_{{ form.profile_picture.name }}').closest('.relative.group').find('label').removeClass('border-red-500');
+                        $('#id_{{ form.profile_picture.name }}-error-message').addClass('hidden');
                     }
 
                     // First name validation
@@ -749,14 +795,17 @@
                     if (!gender) {
                         $('#id_{{ form.gender.name }}').addClass('border-red-500');
                         // Create or update error message
-                        let $errorMsg = $('#gender-error-message');
+                        let $errorMsg = $('#id_{{ form.gender.name }}-error-message');
                         if ($errorMsg.length === 0) {
-                            $errorMsg = $('<p id="gender-error-message" class="text-red-500 text-xs mt-1">Please select your gender.</p>');
+                            $errorMsg = $('<p id="id_{{ form.gender.name }}-error-message" class="text-red-500 text-xs mt-1">Please select your gender.</p>');
                             $('#id_{{ form.gender.name }}').parent().append($errorMsg);
                         } else {
-                            $errorMsg.text('Please select your gender.').removeClass('hidden');
+                            $errorMsg.removeClass('hidden');
                         }
                         isValid = false;
+                    } else {
+                        $('#id_{{ form.gender.name }}').removeClass('border-red-500');
+                        $('#id_{{ form.gender.name }}-error-message').addClass('hidden');
                     }
 
                     // Contact Number validation
@@ -808,14 +857,32 @@
                     if (!logo) {
                         $('#id_{{ form.logo.name }}').parent().parent().parent().addClass('border-red-500');
                         // Create or update error message
-                        let $errorMsg = $('#logo-error-message');
+                        let $errorMsg = $('#id_{{ form.logo.name }}-error-message');
                         if ($errorMsg.length === 0) {
-                            $errorMsg = $('<p id="logo-error-message" class="text-red-500 text-xs mt-1">Please upload your organization logo.</p>');
-                            $('#logoPreviewContainer').parent().parent().append($errorMsg);
+                            $errorMsg = $('<p id="id_{{ form.logo.name }}-error-message" class="text-red-500 text-xs mt-1">Please upload your organization logo.</p>');
+                            $('#id_{{ form.logo.name }}').parent().parent().append($errorMsg);
                         } else {
-                            $errorMsg.text('Please upload your organization logo.').removeClass('hidden');
+                            $errorMsg.removeClass('hidden');
                         }
                         isValid = false;
+                    } else {
+                        $('#id_{{ form.logo.name }}-error-message').addClass('hidden');
+                    }
+
+                    // Profile Picture validation (required)
+                    if (!profilePicture) {
+                        $('#id_{{ form.profile_picture.name }}').parent().parent().parent().addClass('border-red-500');
+                        // Create or update error message
+                        let $errorMsg = $('#id_{{ form.profile_picture.name }}-error-message');
+                        if ($errorMsg.length === 0) {
+                            $errorMsg = $('<p id="id_{{ form.profile_picture.name }}-error-message" class="text-red-500 text-xs mt-1">Please upload your profile picture.</p>');
+                            $('#id_{{ form.profile_picture.name }}').parent().parent().append($errorMsg);
+                        } else {
+                            $errorMsg.removeClass('hidden');
+                        }
+                        isValid = false;
+                    } else {
+                        $('#id_{{ form.profile_picture.name }}-error-message').addClass('hidden');
                     }
 
                     // Username validation
@@ -874,8 +941,16 @@
                         $('#register-error-message strong').text('Error! ');
                         $('#register-error-message .message-text').text('Please fix the errors in the form.');
 
-                        // Scroll to the error message or register button on mobile
-                        if (window.innerWidth < 640) {
+                        // Scroll to the first error - prioritize logo and profile picture
+                        if (!logo) {
+                            $('html, body').animate({
+                                scrollTop: $('#id_{{ form.logo.name }}').closest('.relative.group').offset().top - 100
+                            }, 500);
+                        } else if (!profilePicture) {
+                            $('html, body').animate({
+                                scrollTop: $('#id_{{ form.profile_picture.name }}').closest('.relative.group').offset().top - 100
+                            }, 500);
+                        } else if (window.innerWidth < 640) {
                             setTimeout(function() {
                                 document.getElementById('registerButton').scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }, 100);
@@ -965,6 +1040,10 @@
 
                         // Submit the form via AJAX with file uploads
                         var formData = new FormData($('#registerForm')[0]);
+
+                        // Debug log for gender value
+                        console.log('Gender value in FormData:', formData.get('gender'));
+
                         $.ajax({
                             type: 'POST',
                             url: '{% url "register" %}',
@@ -999,7 +1078,15 @@
                                         for (const field in response.errors) {
                                             const fieldId = '#id_' + field;
                                             $(fieldId).addClass('border-red-500');
-                                            $(fieldId).parent().find('.text-red-500').text(response.errors[field].join(', '));
+
+                                            // Find or create error message element
+                                            let $errorMsg = $(fieldId + '-error-message');
+                                            if ($errorMsg.length === 0) {
+                                                $errorMsg = $('<p id="' + fieldId.substring(1) + '-error-message" class="text-red-500 text-xs mt-1">' + response.errors[field].join(', ') + '</p>');
+                                                $(fieldId).parent().append($errorMsg);
+                                            } else {
+                                                $errorMsg.text(response.errors[field].join(', ')).removeClass('hidden');
+                                            }
                                         }
                                     }
 
@@ -1045,6 +1132,53 @@
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     return emailRegex.test(email);
                 }
+
+                // Password toggle functionality
+                $('.toggle-password').on('click', function() {
+                    const targetId = $(this).data('target');
+                    const passwordInput = $('#' + targetId);
+                    const icon = $(this).find('i');
+
+                    // Toggle password visibility
+                    if (passwordInput.attr('type') === 'password') {
+                        passwordInput.attr('type', 'text');
+                        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                    } else {
+                        passwordInput.attr('type', 'password');
+                        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                    }
+                });
+
+                // Add input validation for all required fields
+                $('input[required], select[required]').on('blur', function() {
+                    const fieldId = $(this).attr('id');
+                    const fieldValue = $(this).val().trim();
+                    const isFileInput = $(this).attr('type') === 'file';
+
+                    if (isFileInput) {
+                        // For file inputs, check if files are selected
+                        if (!this.files || this.files.length === 0) {
+                            $(this).closest('.relative.group').find('label').addClass('border-red-500');
+                            const errorMsgId = '#' + fieldId + '-error-message';
+                            $(errorMsgId).removeClass('hidden');
+                        } else {
+                            $(this).closest('.relative.group').find('label').removeClass('border-red-500');
+                            const errorMsgId = '#' + fieldId + '-error-message';
+                            $(errorMsgId).addClass('hidden');
+                        }
+                    } else {
+                        // For regular inputs
+                        if (!fieldValue) {
+                            $(this).addClass('border-red-500').removeClass('border-gray-300');
+                            const errorMsgId = '#' + fieldId + '-error-message';
+                            $(errorMsgId).removeClass('hidden');
+                        } else {
+                            $(this).removeClass('border-red-500').addClass('border-gray-300');
+                            const errorMsgId = '#' + fieldId + '-error-message';
+                            $(errorMsgId).addClass('hidden');
+                        }
+                    }
+                });
             });
         </script>
     </body>

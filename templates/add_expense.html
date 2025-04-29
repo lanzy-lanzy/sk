@@ -62,5 +62,47 @@
             var total = price * quantity;
             document.getElementById('id_amount').value = total.toFixed(2);
         }
+
+        // Check for duplicate expenses on date change or item name change
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemNameInput = document.getElementById('id_item_name');
+            const dateInput = document.getElementById('id_date_incurred');
+            const projectId = {{ project.id }};
+            let warningDisplayed = false;
+
+            function checkForDuplicates() {
+                const itemName = itemNameInput.value.trim();
+                const date = dateInput.value;
+
+                if (itemName && date) {
+                    // Remove any existing warning
+                    const existingWarning = document.getElementById('duplicate-warning');
+                    if (existingWarning) {
+                        existingWarning.remove();
+                        warningDisplayed = false;
+                    }
+
+                    // Add a warning message if this might be a duplicate
+                    const warningDiv = document.createElement('div');
+                    warningDiv.id = 'duplicate-warning';
+                    warningDiv.className = 'mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg';
+                    warningDiv.innerHTML = `
+                        <p><i class="fas fa-info-circle mr-2"></i>Note: If an expense with the name "${itemName}" already exists for this date,
+                        it will be updated instead of creating a new entry. This prevents duplicate entries and will update the price, quantity,
+                        description, and amount of the existing expense.</p>
+                    `;
+
+                    if (!warningDisplayed) {
+                        document.querySelector('form').insertBefore(warningDiv, document.querySelector('.flex.justify-between'));
+                        warningDisplayed = true;
+                    }
+                }
+            }
+
+            if (itemNameInput && dateInput) {
+                itemNameInput.addEventListener('change', checkForDuplicates);
+                dateInput.addEventListener('change', checkForDuplicates);
+            }
+        });
     </script>
 {% endblock %}

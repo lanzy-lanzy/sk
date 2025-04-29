@@ -65,7 +65,7 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     profile_picture = forms.ImageField(
-        required=False,
+        required=True,
         widget=forms.FileInput(attrs={
             'class': 'hidden',
             'accept': 'image/*'
@@ -186,6 +186,40 @@ class ExpenseForm(forms.ModelForm):
             }),
             'date_incurred': forms.DateInput(attrs={'type': 'date', 'class': 'w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary'}),
         }
+
+    def clean_item_name(self):
+        """
+        Normalize the item name by:
+        1. Trimming whitespace
+        2. Capitalizing the first letter of each word
+        3. Removing any duplicate spaces
+        """
+        item_name = self.cleaned_data.get('item_name', '')
+
+        if item_name:
+            # Trim whitespace
+            item_name = item_name.strip()
+
+            # Capitalize the first letter of each word
+            item_name = ' '.join(word.capitalize() for word in item_name.split())
+
+        return item_name
+
+    def clean(self):
+        """
+        Validate the form data and check for potential issues.
+        """
+        cleaned_data = super().clean()
+
+        # Calculate the amount based on price_per_unit and quantity
+        price_per_unit = cleaned_data.get('price_per_unit')
+        quantity = cleaned_data.get('quantity')
+
+        if price_per_unit is not None and quantity is not None:
+            # Set the amount field
+            cleaned_data['amount'] = price_per_unit * quantity
+
+        return cleaned_data
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True

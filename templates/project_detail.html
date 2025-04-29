@@ -178,10 +178,10 @@
                         <i class="fas fa-list-ul mr-3"></i>Expenses
                     </h3>
                     {% if not request.user.is_superuser %}
-                    <a href="{% url 'add_expense' project.id %}"
+                    <button id="openExpenseModalBtn"
                        class="inline-flex items-center px-4 py-2 bg-tertiary text-white rounded-lg hover:bg-quaternary transition duration-300">
                         <i class="fas fa-plus-circle mr-2"></i>Add New Expense
-                    </a>
+                    </button>
                     {% endif %}
                 </div>
                 <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -327,7 +327,170 @@
     </div>
 </div>
 
+<!-- Add Expense Modal -->
+<div id="expenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" x-data="expenseForm()" x-init="init()">
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" x-text="formTitle"></h3>
+            <button @click="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Duplicate Warning -->
+        <div
+            x-show="duplicateWarning.show"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform scale-95"
+            x-transition:enter-end="opacity-100 transform scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform scale-100"
+            x-transition:leave-end="opacity-0 transform scale-95"
+            :class="{
+                'bg-yellow-100 text-yellow-800 border-yellow-500': duplicateWarning.type === 'warning',
+                'bg-blue-100 text-blue-800 border-blue-500': duplicateWarning.type === 'info'
+            }"
+            class="mb-4 p-4 rounded-lg border-l-4 shadow-md">
+            <p class="flex items-start">
+                <i class="fas mr-2 mt-1 text-lg" :class="duplicateWarning.type === 'warning' ? 'fa-exclamation-triangle' : 'fa-spinner fa-spin'"></i>
+                <span class="flex-1" x-html="duplicateWarning.message"></span>
+            </p>
+        </div>
+
+        <form id="expenseForm" @submit.prevent="submitForm">
+            {% csrf_token %}
+            <input type="hidden" id="project-id" value="{{ project.id }}" />
+
+            <div class="mb-4">
+                <label for="modal_item_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Item Name
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-tag text-gray-400"></i>
+                    </div>
+                    <input type="text" name="item_name" id="modal_item_name"
+                           x-model="formData.itemName"
+                           @input="onItemNameInput"
+                           @change="checkForDuplicates"
+                           :class="{
+                               'border-yellow-500 bg-yellow-50': isDuplicate,
+                               'border-red-500 bg-red-50': hasError,
+                               'border-blue-300 bg-blue-50': duplicateWarning.show && duplicateWarning.type === 'info'
+                           }"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           required>
+                </div>
+                <p x-show="errors.itemName" x-text="errors.itemName" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal_price_per_unit" class="block text-sm font-medium text-gray-700 mb-2">
+                    Price Per Unit
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-dollar-sign text-gray-400"></i>
+                    </div>
+                    <input type="number" name="price_per_unit" id="modal_price_per_unit"
+                           x-model="formData.pricePerUnit"
+                           @input="calculateTotal"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           required>
+                </div>
+                <p x-show="errors.pricePerUnit" x-text="errors.pricePerUnit" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal_quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                    Quantity
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-hashtag text-gray-400"></i>
+                    </div>
+                    <input type="number" name="quantity" id="modal_quantity"
+                           x-model="formData.quantity"
+                           @input="calculateTotal"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           required>
+                </div>
+                <p x-show="errors.quantity" x-text="errors.quantity" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal_description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-file-alt text-gray-400"></i>
+                    </div>
+                    <input type="text" name="description" id="modal_description"
+                           x-model="formData.description"
+                           @input="capitalizeInput"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           required>
+                </div>
+                <p x-show="errors.description" x-text="errors.description" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                    Amount
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-money-bill-wave text-gray-400"></i>
+                    </div>
+                    <input type="number" name="amount" id="modal_amount"
+                           x-model="formData.amount"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           readonly>
+                </div>
+                <p x-show="errors.amount" x-text="errors.amount" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="mb-4">
+                <label for="modal_date_incurred" class="block text-sm font-medium text-gray-700 mb-2">
+                    Date Incurred
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-calendar-alt text-gray-400"></i>
+                    </div>
+                    <input type="date" name="date_incurred" id="modal_date_incurred"
+                           x-model="formData.dateIncurred"
+                           @change="onDateChange"
+                           :class="{
+                               'border-yellow-500 bg-yellow-50': isDuplicate && formData.itemName.trim().length > 2,
+                               'border-red-500 bg-red-50': errors.dateIncurred,
+                               'border-blue-300 bg-blue-50': duplicateWarning.show && duplicateWarning.type === 'info' && formData.itemName.trim().length > 2
+                           }"
+                           class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tertiary"
+                           required>
+                </div>
+                <p x-show="errors.dateIncurred" x-text="errors.dateIncurred" class="mt-2 text-sm text-red-600"></p>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-6">
+                <button type="button" @click="closeModal()"
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition duration-300">
+                    Cancel
+                </button>
+                <button type="submit" id="saveExpenseBtn"
+                       :disabled="isSubmitting"
+                       class="px-4 py-2 bg-tertiary text-white rounded hover:bg-quaternary transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas" :class="isDuplicate ? 'fa-edit' : 'fa-save'" class="mr-2"></i>
+                    <span x-text="isDuplicate ? 'Update Expense' : 'Save Expense'"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+// Delete Modal Functions
 function confirmDelete(deleteUrl) {
     document.getElementById('deleteModal').classList.remove('hidden');
     document.getElementById('deleteModal').classList.add('flex');
@@ -345,6 +508,484 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
         closeDeleteModal();
     }
 });
+
+// Expense Modal Functions with Alpine.js
+function expenseForm() {
+    return {
+        formTitle: 'Add New Expense',
+        isDuplicate: false,
+        isSubmitting: false,
+        hasError: false,
+        formData: {
+            itemName: '',
+            pricePerUnit: '',
+            quantity: '',
+            description: '',
+            amount: '',
+            dateIncurred: new Date().toISOString().split('T')[0] // Today's date
+        },
+        errors: {},
+        duplicateWarning: {
+            show: false,
+            type: 'info',
+            message: ''
+        },
+
+        // Initialize the form
+        init() {
+            // Set up event listener for outside clicks
+            document.getElementById('expenseModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('expenseModal')) {
+                    this.closeModal();
+                }
+            });
+
+            // Set today's date as default
+            this.formData.dateIncurred = new Date().toISOString().split('T')[0];
+
+            // Initialize the form title
+            this.formTitle = 'Add New Expense';
+        },
+
+        // Open the modal
+        openModal() {
+            document.getElementById('expenseModal').classList.remove('hidden');
+            document.getElementById('expenseModal').classList.add('flex');
+            this.resetForm();
+        },
+
+        // Close the modal
+        closeModal() {
+            document.getElementById('expenseModal').classList.add('hidden');
+            document.getElementById('expenseModal').classList.remove('flex');
+            this.resetForm();
+        },
+
+        // Reset the form
+        resetForm() {
+            this.formData = {
+                itemName: '',
+                pricePerUnit: '',
+                quantity: '',
+                description: '',
+                amount: '',
+                dateIncurred: new Date().toISOString().split('T')[0]
+            };
+            this.errors = {};
+            this.isDuplicate = false;
+            this.isSubmitting = false;
+            this.hasError = false;
+            this.duplicateWarning.show = false;
+        },
+
+        // Capitalize input text
+        capitalizeInput(event) {
+            const input = event.target;
+            const cursorPos = input.selectionStart;
+
+            // Capitalize the first letter of each word
+            const words = input.value.split(' ');
+            const capitalizedWords = words.map(word => {
+                if (word.length > 0) {
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                }
+                return word;
+            });
+
+            input.value = capitalizedWords.join(' ');
+            this.formData[input.name] = input.value;
+
+            // Restore cursor position
+            input.setSelectionRange(cursorPos, cursorPos);
+        },
+
+        // Handle item name input
+        onItemNameInput(event) {
+            // Capitalize words
+            this.capitalizeInput(event);
+
+            // Reset errors when user starts typing
+            if (this.errors.itemName) {
+                this.errors.itemName = '';
+            }
+
+            // Check for duplicates if we have both name and date
+            if (this.formData.itemName.trim().length > 2 && this.formData.dateIncurred) {
+                // Show checking message immediately for better user feedback
+                this.duplicateWarning.show = true;
+                this.duplicateWarning.type = 'info';
+                this.duplicateWarning.message = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking if this expense already exists on the selected date...';
+
+                // Debounce the check to avoid too many requests
+                this.debounceCheckForDuplicates();
+            } else {
+                // Hide warning if the field is empty or too short
+                this.duplicateWarning.show = false;
+                this.isDuplicate = false;
+            }
+        },
+
+        // Debounce the duplicate check
+        debounceTimeout: null,
+        debounceCheckForDuplicates() {
+            clearTimeout(this.debounceTimeout);
+
+            // Show checking message
+            this.duplicateWarning.show = true;
+            this.duplicateWarning.type = 'info';
+            this.duplicateWarning.message = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking if this expense already exists on the selected date...';
+
+            this.debounceTimeout = setTimeout(() => {
+                this.checkForDuplicates();
+            }, 300);
+        },
+
+        // Check for duplicate expenses
+        checkForDuplicates() {
+            const itemName = this.formData.itemName.trim();
+            const date = this.formData.dateIncurred;
+            const projectId = document.getElementById('project-id').value;
+
+            if (!itemName || !date) {
+                this.duplicateWarning.show = false;
+                this.isDuplicate = false;
+                return;
+            }
+
+            // Show checking message
+            this.duplicateWarning.show = true;
+            this.duplicateWarning.type = 'info';
+            this.duplicateWarning.message = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking if this expense already exists on the selected date...';
+
+            // Use XMLHttpRequest for better error handling
+            const xhr = new XMLHttpRequest();
+            const url = `/project/${projectId}/add_expense/?check=true&item_name=${encodeURIComponent(itemName)}&date=${date}`;
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.exists) {
+                            // Show warning with update message
+                            this.duplicateWarning.show = true;
+                            this.duplicateWarning.type = 'warning';
+                            this.duplicateWarning.message = `<strong>Duplicate Found:</strong> An expense named "<strong>${itemName}</strong>" already exists for ${new Date(date).toLocaleDateString()}. <strong>The existing expense will be updated</strong> instead of creating a duplicate entry. This will update the price, quantity, description, and amount of the existing expense.`;
+                            this.isDuplicate = true;
+                        } else {
+                            // Hide warning
+                            this.duplicateWarning.show = false;
+                            this.isDuplicate = false;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing duplicate check response:', e);
+                        this.duplicateWarning.show = false;
+                        this.isDuplicate = false;
+                    }
+                } else {
+                    console.error('HTTP error in duplicate check:', xhr.status);
+                    this.duplicateWarning.show = false;
+                    this.isDuplicate = false;
+                }
+            };
+
+            xhr.onerror = () => {
+                console.error('Network error in duplicate check');
+                this.duplicateWarning.show = false;
+                this.isDuplicate = false;
+            };
+
+            xhr.ontimeout = () => {
+                console.error('Timeout in duplicate check');
+                this.duplicateWarning.show = false;
+                this.isDuplicate = false;
+            };
+
+            xhr.timeout = 10000; // 10 seconds
+            xhr.send();
+        },
+
+        // Handle date change
+        onDateChange() {
+            // Reset date errors
+            if (this.errors.dateIncurred) {
+                this.errors.dateIncurred = '';
+            }
+
+            // Check for duplicates if we have both name and date
+            if (this.formData.itemName.trim().length > 2 && this.formData.dateIncurred) {
+                // Show checking message immediately for better user feedback
+                this.duplicateWarning.show = true;
+                this.duplicateWarning.type = 'info';
+                this.duplicateWarning.message = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking if this expense already exists on the selected date...';
+
+                // Check for duplicates immediately
+                this.checkForDuplicates();
+            } else {
+                // Hide warning if the item name is empty or too short
+                this.duplicateWarning.show = false;
+                this.isDuplicate = false;
+            }
+        },
+
+        // Calculate total amount
+        calculateTotal() {
+            const price = parseFloat(this.formData.pricePerUnit) || 0;
+            const quantity = parseInt(this.formData.quantity) || 0;
+            this.formData.amount = (price * quantity).toFixed(2);
+        },
+
+        // Submit the form
+        submitForm() {
+            // Reset errors
+            this.errors = {};
+            this.hasError = false;
+
+            // Validate form
+            let isValid = true;
+
+            // Validate item name
+            if (!this.formData.itemName.trim()) {
+                this.errors.itemName = 'Item name is required';
+                isValid = false;
+            }
+
+            // Validate price
+            if (!this.formData.pricePerUnit || isNaN(this.formData.pricePerUnit) || this.formData.pricePerUnit <= 0) {
+                this.errors.pricePerUnit = 'Price must be a positive number';
+                isValid = false;
+            }
+
+            // Validate quantity
+            if (!this.formData.quantity || isNaN(this.formData.quantity) || this.formData.quantity <= 0) {
+                this.errors.quantity = 'Quantity must be a positive number';
+                isValid = false;
+            }
+
+            // Validate date
+            if (!this.formData.dateIncurred) {
+                this.errors.dateIncurred = 'Date is required';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                this.hasError = true;
+                return;
+            }
+
+            // Update the button text
+            this.isSubmitting = true;
+
+            // First check for duplicates
+            const itemName = this.formData.itemName.trim();
+            const date = this.formData.dateIncurred;
+            const projectId = document.getElementById('project-id').value;
+
+            // Show checking message
+            this.duplicateWarning.show = true;
+            this.duplicateWarning.type = 'info';
+            this.duplicateWarning.message = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking if this expense already exists on the selected date...';
+
+            // Use XMLHttpRequest for better error handling
+            const xhr = new XMLHttpRequest();
+            const url = `/project/${projectId}/add_expense/?check=true&item_name=${encodeURIComponent(itemName)}&date=${date}`;
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.exists) {
+                            // Show warning with update message
+                            this.duplicateWarning.show = true;
+                            this.duplicateWarning.type = 'warning';
+                            this.duplicateWarning.message = `<strong>Duplicate Found:</strong> An expense named "<strong>${itemName}</strong>" already exists for ${new Date(date).toLocaleDateString()}. <strong>The existing expense will be updated</strong> instead of creating a duplicate entry. This will update the price, quantity, description, and amount of the existing expense.`;
+                            this.isDuplicate = true;
+
+                            // Proceed with form submission after a short delay
+                            setTimeout(() => {
+                                this.sendFormData();
+                            }, 1000);
+                        } else {
+                            // No duplicate, proceed with normal submission
+                            this.isDuplicate = false;
+                            this.sendFormData();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing duplicate check response:', e);
+                        // Just proceed with form submission despite the error
+                        this.isDuplicate = false;
+                        this.sendFormData();
+                    }
+                } else {
+                    console.error('HTTP error in duplicate check:', xhr.status);
+                    // Just proceed with form submission despite the error
+                    this.isDuplicate = false;
+                    this.sendFormData();
+                }
+            };
+
+            xhr.onerror = () => {
+                console.error('Network error in duplicate check');
+                // Just proceed with form submission despite the error
+                this.isDuplicate = false;
+                this.sendFormData();
+            };
+
+            xhr.ontimeout = () => {
+                console.error('Timeout in duplicate check');
+                // Just proceed with form submission despite the error
+                this.isDuplicate = false;
+                this.sendFormData();
+            };
+
+            xhr.timeout = 10000; // 10 seconds
+            xhr.send();
+        },
+
+        // Send form data to the server
+        sendFormData() {
+            const form = document.getElementById('expenseForm');
+            const formData = new FormData(form);
+            const projectId = document.getElementById('project-id').value;
+
+            // Update the button text
+            this.isSubmitting = true;
+
+            // Use XMLHttpRequest instead of fetch to better handle redirects
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/project/${projectId}/add_expense/`, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('X-CSRFToken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            xhr.onload = () => {
+                console.log('Response status:', xhr.status);
+                console.log('Response headers:', xhr.getAllResponseHeaders());
+
+                // Handle different response types
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Success response
+                    try {
+                        // Try to parse as JSON
+                        if (xhr.responseText && xhr.responseText.trim()) {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.status === 'success') {
+                                // JSON success response
+                                this.closeModal();
+                                window.location.reload();
+                                return;
+                            } else if (data.errors) {
+                                // Validation errors
+                                this.errors = data.errors;
+                                this.hasError = true;
+                                this.isSubmitting = false;
+                                return;
+                            } else if (data.message) {
+                                // Error message in JSON
+                                alert(data.message);
+                                this.isSubmitting = false;
+                                return;
+                            }
+                        }
+
+                        // If we got here, it's likely a redirect or HTML response
+                        if (xhr.responseText.includes('<!DOCTYPE html>') ||
+                            xhr.responseText.includes('<html>')) {
+                            console.log('Received HTML response - likely a successful redirect');
+                            this.closeModal();
+                            window.location.reload();
+                            return;
+                        }
+
+                        // Default success case
+                        this.closeModal();
+                        window.location.reload();
+
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+
+                        // If parsing failed, it's likely a redirect or HTML response
+                        if (xhr.responseText.includes('<!DOCTYPE html>') ||
+                            xhr.responseText.includes('<html>')) {
+                            console.log('Received HTML response - likely a successful redirect');
+                            this.closeModal();
+                            window.location.reload();
+                        } else {
+                            // Unknown error
+                            this.isSubmitting = false;
+                            alert('An unexpected error occurred. Please try again.');
+                        }
+                    }
+                } else if (xhr.status === 302) {
+                    // Handle redirect
+                    console.log('Received redirect response');
+                    this.closeModal();
+                    window.location.reload();
+                } else {
+                    // Error response
+                    console.error('HTTP error:', xhr.status);
+                    this.isSubmitting = false;
+
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.message) {
+                            alert(data.message);
+                        } else {
+                            alert(`Error: ${xhr.status} ${xhr.statusText}`);
+                        }
+                    } catch (e) {
+                        alert(`Error: ${xhr.status} ${xhr.statusText}`);
+                    }
+                }
+            };
+
+            xhr.onerror = () => {
+                console.error('Request error:', xhr.status, xhr.statusText);
+                this.isSubmitting = false;
+                alert('A network error occurred. Please check your connection and try again.');
+            };
+
+            xhr.ontimeout = () => {
+                console.error('Request timed out');
+                this.isSubmitting = false;
+                alert('The request timed out. Please try again.');
+            };
+
+            // Set a timeout
+            xhr.timeout = 30000; // 30 seconds
+
+            // Send the form data
+            xhr.send(formData);
+        }
+    };
+}
+
+// Function to open the expense modal from outside Alpine
+function openExpenseModal() {
+    try {
+        // Get the Alpine component instance
+        const modalElement = document.getElementById('expenseModal');
+        if (modalElement && modalElement.__x) {
+            // If Alpine is initialized, use the component method
+            modalElement.__x.$data.openModal();
+        } else {
+            // Fallback to manual DOM manipulation if Alpine is not ready
+            console.warn('Alpine.js not initialized yet, using fallback method');
+            modalElement.classList.remove('hidden');
+            modalElement.classList.add('flex');
+        }
+    } catch (error) {
+        console.error('Error opening expense modal:', error);
+        // Fallback to manual DOM manipulation
+        const modalElement = document.getElementById('expenseModal');
+        if (modalElement) {
+            modalElement.classList.remove('hidden');
+            modalElement.classList.add('flex');
+        }
+    }
+}
 
 function editExpense(expenseId) {
     window.location.href = `/expense/${expenseId}/edit/`;
@@ -365,6 +1006,8 @@ function deleteExpense(expenseId) {
     }
 }
 
+
+
 // Function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
@@ -381,13 +1024,23 @@ function getCookie(name) {
     return cookieValue;
 }
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('imageModal', () => ({
-        closeModal() {
-            const modalContainer = document.getElementById('modalContainer');
-            modalContainer.innerHTML = '';
-        }
-    }));
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listener for the expense modal button
+    document.getElementById('openExpenseModalBtn').addEventListener('click', openExpenseModal);
+
+    // Initialize Alpine.js if it's being used
+    if (typeof Alpine !== 'undefined') {
+        // Register the expense form component
+        Alpine.data('expenseForm', expenseForm);
+
+        // Register the image modal component
+        Alpine.data('imageModal', () => ({
+            closeModal() {
+                const modalContainer = document.getElementById('modalContainer');
+                modalContainer.innerHTML = '';
+            }
+        }));
+    }
 });
 
 // Handle keyboard navigation
