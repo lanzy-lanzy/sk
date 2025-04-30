@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Edit User - SK Budget{% endblock %}
+{% block title %}{% if view_only %}User Details{% else %}Edit User{% endif %} - SK Budget{% endblock %}
 
 {% block content %}
     <div class="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-tertiary">
-                <i class="fas fa-user-edit mr-2"></i>Edit User: {{ user_being_edited.username }}
+                <i class="{% if view_only %}fas fa-user{% else %}fas fa-user-edit{% endif %} mr-2"></i>{% if view_only %}User Details: {% else %}Edit User: {% endif %}{{ user_being_edited.username }}
             </h1>
             <a href="{% url 'user_approval' %}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-300 flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i> Back to User List
@@ -27,7 +27,7 @@
 
         <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Left Column -->
                 <div class="space-y-6">
@@ -91,7 +91,7 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <!-- Right Column -->
                 <div class="space-y-6">
                     <!-- Gender -->
@@ -169,7 +169,7 @@
                             <i class="fas fa-user text-gray-400 text-4xl"></i>
                         </div>
                     {% endif %}
-                    
+
                     {% if user_being_edited.logo %}
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-700 mb-1">Organization Logo</p>
@@ -179,12 +179,14 @@
                 </div>
             </div>
 
-            <!-- Submit Button -->
+            <!-- Submit Button (only show if not view_only) -->
+            {% if not view_only %}
             <div class="flex justify-end mt-8">
                 <button type="submit" class="bg-tertiary hover:bg-quaternary text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 flex items-center">
                     <i class="fas fa-save mr-2"></i> Save Changes
                 </button>
             </div>
+            {% endif %}
         </form>
     </div>
 

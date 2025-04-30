@@ -34,5 +34,6 @@ urlpatterns = [
     path('approve-user/<int:user_id>/', views.approve_user, name='approve_user'),
     path('reject-user/<int:user_id>/', views.reject_user, name='reject_user'),
     path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('view-user/<int:user_id>/', views.view_user_details, name='view_user_details'),
     path('registration-codes/', views.generate_registration_code, name='generate_registration_code'),
 ]

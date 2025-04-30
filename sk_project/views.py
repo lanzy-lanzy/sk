@@ -236,6 +236,23 @@ def reject_user(request, user_id):
     return redirect('user_approval')
 
 @user_passes_test(lambda u: u.is_superuser)
+def view_user_details(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    form = AdminUserEditForm(instance=user)
+
+    # Make all form fields read-only
+    for field in form.fields.values():
+        field.widget.attrs['readonly'] = True
+        if hasattr(field.widget, 'can_add_related'):
+            field.widget.can_add_related = False
+
+    return render(request, 'edit_user.html', {
+        'form': form,
+        'user_being_edited': user,
+        'view_only': True
+    })
+
+@user_passes_test(lambda u: u.is_superuser)
 def edit_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
 
