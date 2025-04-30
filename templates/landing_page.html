@@ -54,6 +54,31 @@
             </nav>
         </header>
 
+        <!-- Sticky Search Bar -->
+        <div id="stickySearch" class="hidden fixed w-full z-40 top-16 transition-all duration-300 transform translate-y-0 opacity-100">
+            <div class="container mx-auto px-4 py-3">
+                <div class="glass-effect rounded-full shadow-lg">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search projects by title, chairman, location..."
+                               class="w-full pl-12 pr-12 py-3 bg-transparent text-tertiary placeholder-tertiary/60 rounded-full focus:outline-none">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-tertiary text-lg"></i>
+                        </div>
+                        <button id="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-tertiary hover:text-quaternary transition-colors duration-200 hidden">
+                            <i class="fas fa-times-circle text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="searchResults" class="mt-2 glass-effect rounded-xl p-3 shadow-lg max-h-60 overflow-y-auto hidden">
+                    <div id="resultsCount" class="text-sm text-tertiary mb-2 font-medium"></div>
+                    <div id="noResults" class="text-center py-4 hidden">
+                        <i class="fas fa-search text-tertiary/50 text-3xl mb-2"></i>
+                        <p class="text-tertiary">No projects found matching your search.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <main class="pt-20">
             <!-- Hero Section -->
             <section class="container mx-auto px-4 py-8 sm:py-16">
@@ -73,12 +98,22 @@
 
             <!-- Recently Completed Projects Section -->
             <section class="container mx-auto px-4 py-8 sm:py-16">
-                <h2 class="text-3xl sm:text-4xl font-bold text-tertiary mb-6 sm:mb-12 text-center">
-                    <i class="fas fa-trophy mr-2"></i>Recently Completed Projects
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-tertiary mb-4 sm:mb-0 text-center sm:text-left">
+                        <i class="fas fa-trophy mr-2"></i>Recently Completed Projects
+                    </h2>
+                    <button id="showSearch" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto sm:mx-0">
+                        <i class="fas fa-search mr-2"></i>Search Projects
+                    </button>
+                </div>
+                <div id="projectsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                     {% for project in completed_projects %}
-                    <div class="glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl">
+                    <div class="project-card glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
+                         data-title="{{ project.title|lower }}"
+                         data-chairman="{{ project.chairman_name|lower }}"
+                         data-location="{{ project.address|lower }}"
+                         data-date="{{ project.completion_date|date:"F d, Y"|lower }}"
+                         data-description="{% if project.description %}{{ project.description|lower }}{% endif %}">
                         <div class="h-56 bg-tertiary relative overflow-hidden">
                             {% if project.image %}
                                 <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-full object-cover">
@@ -88,7 +123,7 @@
                                 </div>
                             {% endif %}
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                                <h3 class="text-2xl font-bold text-white">{{ project.title }}</h3>
+                                <h3 class="text-2xl font-bold text-white project-title">{{ project.title }}</h3>
                             </div>
                         </div>
                         <div class="p-6 space-y-4">
@@ -98,7 +133,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Chairman</p>
-                                    <p class="font-semibold text-tertiary">{{ project.chairman_name }}</p>
+                                    <p class="font-semibold text-tertiary project-chairman">{{ project.chairman_name }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4">
@@ -107,7 +142,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Location</p>
-                                    <p class="font-semibold text-tertiary">{{ project.address }}</p>
+                                    <p class="font-semibold text-tertiary project-location">{{ project.address }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4">
@@ -116,12 +151,12 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Completed</p>
-                                    <p class="font-semibold text-tertiary">{{ project.completion_date|date:"F d, Y" }}</p>
+                                    <p class="font-semibold text-tertiary project-date">{{ project.completion_date|date:"F d, Y" }}</p>
                                 </div>
                             </div>
                             {% if project.description %}
                             <div class="mt-4 pt-4 border-t border-gray-200">
-                                <p class="text-sm text-gray-600 line-clamp-3">{{ project.description }}</p>
+                                <p class="text-sm text-gray-600 line-clamp-3 project-description">{{ project.description }}</p>
                             </div>
                             {% endif %}
                             <div class="flex justify-center mt-4 pt-4 border-t border-gray-200">
@@ -162,9 +197,200 @@
         </footer>
 
         <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Elements
+                const stickySearch = document.getElementById('stickySearch');
+                const searchInput = document.getElementById('searchInput');
+                const clearSearch = document.getElementById('clearSearch');
+                const showSearch = document.getElementById('showSearch');
+                const searchResults = document.getElementById('searchResults');
+                const resultsCount = document.getElementById('resultsCount');
+                const noResults = document.getElementById('noResults');
+                const projectCards = document.querySelectorAll('.project-card');
+                const projectsContainer = document.getElementById('projectsContainer');
+
+                // Variables to track state
+                let isSearchVisible = false;
+                let lastScrollY = window.scrollY;
+                let searchDebounceTimer;
+
+                // Show search bar when button is clicked
+                if (showSearch) {
+                    showSearch.addEventListener('click', function() {
+                        toggleSearchBar(true);
+                        searchInput.focus();
+
+                        // Scroll to search bar if needed
+                        if (window.scrollY > 0) {
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                }
+
+                // Toggle search bar visibility
+                function toggleSearchBar(show) {
+                    if (stickySearch) {
+                        if (show) {
+                            stickySearch.classList.remove('hidden');
+                            setTimeout(() => {
+                                stickySearch.classList.add('opacity-100');
+                                stickySearch.classList.remove('opacity-0', '-translate-y-full');
+                            }, 10);
+                            isSearchVisible = true;
+                        } else {
+                            stickySearch.classList.add('opacity-0', '-translate-y-full');
+                            stickySearch.classList.remove('opacity-100');
+                            setTimeout(() => {
+                                stickySearch.classList.add('hidden');
+                            }, 300);
+                            isSearchVisible = false;
+
+                            // Reset search
+                            if (searchInput) searchInput.value = '';
+                            filterProjects('');
+                            if (searchResults) searchResults.classList.add('hidden');
+                        }
+                    }
+                }
+
+                // Handle scroll events for sticky behavior
+                window.addEventListener('scroll', function() {
+                    const currentScrollY = window.scrollY;
+
+                    // Show search bar when scrolling up past hero section
+                    if (currentScrollY > 300 && currentScrollY < lastScrollY && !isSearchVisible) {
+                        toggleSearchBar(true);
+                    }
+
+                    // Hide search bar when scrolling down significantly
+                    if (currentScrollY > lastScrollY + 50 && isSearchVisible && searchInput.value === '') {
+                        toggleSearchBar(false);
+                    }
+
+                    lastScrollY = currentScrollY;
+                });
+
+                // Clear search button
+                if (clearSearch) {
+                    clearSearch.addEventListener('click', function() {
+                        searchInput.value = '';
+                        searchInput.focus();
+                        clearSearch.classList.add('hidden');
+                        filterProjects('');
+                        searchResults.classList.add('hidden');
+                    });
+                }
+
+                // Search input handler
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.trim().toLowerCase();
+
+                        // Show/hide clear button
+                        if (searchTerm.length > 0) {
+                            clearSearch.classList.remove('hidden');
+                        } else {
+                            clearSearch.classList.add('hidden');
+                        }
+
+                        // Debounce search for better performance
+                        clearTimeout(searchDebounceTimer);
+                        searchDebounceTimer = setTimeout(() => {
+                            filterProjects(searchTerm);
+                        }, 300);
+                    });
+
+                    // Handle escape key to close search
+                    searchInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            toggleSearchBar(false);
+                        }
+                    });
+                }
+
+                // Filter projects based on search term
+                function filterProjects(searchTerm) {
+                    if (!projectCards.length) return;
+
+                    let visibleCount = 0;
+                    let highlightedResults = [];
+
+                    projectCards.forEach(card => {
+                        const title = card.dataset.title || '';
+                        const chairman = card.dataset.chairman || '';
+                        const location = card.dataset.location || '';
+                        const date = card.dataset.date || '';
+                        const description = card.dataset.description || '';
+
+                        const allText = `${title} ${chairman} ${location} ${date} ${description}`;
+
+                        if (searchTerm === '' || allText.includes(searchTerm)) {
+                            card.style.display = '';
+                            visibleCount++;
+
+                            // If this is a strong match, add to highlighted results
+                            if (searchTerm !== '' && (title.includes(searchTerm) || chairman.includes(searchTerm))) {
+                                highlightedResults.push(card);
+                            }
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Update results count and visibility
+                    if (searchTerm !== '') {
+                        searchResults.classList.remove('hidden');
+
+                        if (visibleCount > 0) {
+                            resultsCount.textContent = `Found ${visibleCount} project${visibleCount !== 1 ? 's' : ''} matching "${searchTerm}"`;
+                            noResults.classList.add('hidden');
+
+                            // Move highlighted results to the top if searching
+                            if (highlightedResults.length > 0) {
+                                highlightedResults.forEach(card => {
+                                    projectsContainer.prepend(card);
+                                });
+                            }
+                        } else {
+                            resultsCount.textContent = '';
+                            noResults.classList.remove('hidden');
+                        }
+                    } else {
+                        searchResults.classList.add('hidden');
+
+                        // Restore original order when search is cleared
+                        const originalOrder = Array.from(projectCards);
+                        originalOrder.sort((a, b) => {
+                            const dateA = a.querySelector('.project-date')?.textContent || '';
+                            const dateB = b.querySelector('.project-date')?.textContent || '';
+                            return new Date(dateB) - new Date(dateA); // Most recent first
+                        });
+
+                        originalOrder.forEach(card => {
+                            projectsContainer.appendChild(card);
+                        });
+                    }
+                }
+
+                // Close search when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (isSearchVisible &&
+                        !stickySearch.contains(e.target) &&
+                        e.target !== showSearch &&
+                        !showSearch.contains(e.target)) {
+                        if (searchInput.value === '') {
+                            toggleSearchBar(false);
+                        }
+                    }
+                });
+            });
+
             // Animate elements on scroll
             function animateOnScroll() {
-                gsap.from(".glass-effect", {
+                gsap.from(".glass-effect:not(#stickySearch, #searchResults)", {
                     scrollTrigger: {
                         trigger: ".glass-effect",
                         start: "top bottom",
