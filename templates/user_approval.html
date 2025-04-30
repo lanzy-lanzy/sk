@@ -42,7 +42,7 @@
                             <td class="py-3 px-4 border-b">
                                 <div class="flex space-x-2">
                                     <a href="{% url 'edit_user' user.id %}" class="inline-flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 text-sm">
-                                        <i class="fas fa-edit mr-1"></i>Edit
+                                        <i class="fas fa-eye mr-1"></i>View Details
                                     </a>
                                     <form method="post" action="{% url 'approve_user' user.id %}" class="inline">
                                         {% csrf_token %}
@@ -97,7 +97,7 @@
                             </td>
                             <td class="py-3 px-4 border-b">
                                 <a href="{% url 'edit_user' user.id %}" class="inline-flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 text-sm">
-                                    <i class="fas fa-edit mr-1"></i>Edit
+                                    <i class="fas fa-eye mr-1"></i>View Details
                                 </a>
                             </td>
                         </tr>
