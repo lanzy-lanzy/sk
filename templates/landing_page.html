@@ -54,34 +54,11 @@
             </nav>
         </header>
 
-        <!-- Sticky Search Bar -->
-        <div id="stickySearch" class="hidden fixed w-full z-40 top-16 transition-all duration-300 transform translate-y-0 opacity-100">
-            <div class="container mx-auto px-4 py-3">
-                <div class="glass-effect rounded-full shadow-lg">
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search projects by title, chairman, location..."
-                               class="w-full pl-12 pr-12 py-3 bg-transparent text-tertiary placeholder-tertiary/60 rounded-full focus:outline-none">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-tertiary text-lg"></i>
-                        </div>
-                        <button id="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-tertiary hover:text-quaternary transition-colors duration-200 hidden">
-                            <i class="fas fa-times-circle text-lg"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="searchResults" class="mt-2 glass-effect rounded-xl p-3 shadow-lg max-h-60 overflow-y-auto hidden">
-                    <div id="resultsCount" class="text-sm text-tertiary mb-2 font-medium"></div>
-                    <div id="noResults" class="text-center py-4 hidden">
-                        <i class="fas fa-search text-tertiary/50 text-3xl mb-2"></i>
-                        <p class="text-tertiary">No projects found matching your search.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- We'll move the search bar to the Recently Completed Projects section -->
 
         <main class="pt-20">
             <!-- Hero Section -->
-            <section class="container mx-auto px-4 py-8 sm:py-16">
+            <section id="getStartedSection" class="container mx-auto px-4 py-8 sm:py-16">
                 <div class="text-center max-w-4xl mx-auto">
                     <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-tertiary mb-4 sm:mb-6 leading-tight">
                         <span class="block">Empowering Youth Leadership</span>
@@ -98,13 +75,35 @@
 
             <!-- Recently Completed Projects Section -->
             <section class="container mx-auto px-4 py-8 sm:py-16">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-12">
-                    <h2 class="text-3xl sm:text-4xl font-bold text-tertiary mb-4 sm:mb-0 text-center sm:text-left">
+                <div class="mb-6 sm:mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-tertiary text-center mb-6">
                         <i class="fas fa-trophy mr-2"></i>Recently Completed Projects
                     </h2>
-                    <button id="showSearch" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto sm:mx-0">
-                        <i class="fas fa-search mr-2"></i>Search Projects
-                    </button>
+
+                    <!-- Search Bar -->
+                    <div id="stickySearch" class="relative w-full transition-all duration-300">
+                        <div class="container mx-auto px-4">
+                            <div class="glass-effect rounded-full shadow-lg">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="Search projects by title, chairman, location..."
+                                           class="w-full pl-12 pr-12 py-3 bg-transparent text-tertiary placeholder-tertiary/60 rounded-full focus:outline-none">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-tertiary text-lg"></i>
+                                    </div>
+                                    <button id="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center text-tertiary hover:text-quaternary transition-colors duration-200 hidden">
+                                        <i class="fas fa-times-circle text-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="searchResults" class="mt-2 glass-effect rounded-xl p-3 shadow-lg max-h-60 overflow-y-auto hidden">
+                                <div id="resultsCount" class="text-sm text-tertiary mb-2 font-medium"></div>
+                                <div id="noResults" class="text-center py-4 hidden">
+                                    <i class="fas fa-search text-tertiary/50 text-3xl mb-2"></i>
+                                    <p class="text-tertiary">No projects found matching your search.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="projectsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                     {% for project in completed_projects %}
@@ -202,7 +201,6 @@
                 const stickySearch = document.getElementById('stickySearch');
                 const searchInput = document.getElementById('searchInput');
                 const clearSearch = document.getElementById('clearSearch');
-                const showSearch = document.getElementById('showSearch');
                 const searchResults = document.getElementById('searchResults');
                 const resultsCount = document.getElementById('resultsCount');
                 const noResults = document.getElementById('noResults');
@@ -210,67 +208,39 @@
                 const projectsContainer = document.getElementById('projectsContainer');
 
                 // Variables to track state
-                let isSearchVisible = false;
-                let lastScrollY = window.scrollY;
                 let searchDebounceTimer;
+                let projectsSection = document.querySelector('.project-card')?.closest('section');
+                // Find the heading by looking for the h2 that contains the trophy icon
+                let projectsHeading = document.querySelector('h2 i.fa-trophy')?.closest('h2');
 
-                // Show search bar when button is clicked
-                if (showSearch) {
-                    showSearch.addEventListener('click', function() {
-                        toggleSearchBar(true);
-                        searchInput.focus();
-
-                        // Scroll to search bar if needed
-                        if (window.scrollY > 0) {
-                            window.scrollTo({
-                                top: 0,
-                                behavior: 'smooth'
-                            });
-                        }
-                    });
-                }
-
-                // Toggle search bar visibility
-                function toggleSearchBar(show) {
-                    if (stickySearch) {
-                        if (show) {
-                            stickySearch.classList.remove('hidden');
-                            setTimeout(() => {
-                                stickySearch.classList.add('opacity-100');
-                                stickySearch.classList.remove('opacity-0', '-translate-y-full');
-                            }, 10);
-                            isSearchVisible = true;
-                        } else {
-                            stickySearch.classList.add('opacity-0', '-translate-y-full');
-                            stickySearch.classList.remove('opacity-100');
-                            setTimeout(() => {
-                                stickySearch.classList.add('hidden');
-                            }, 300);
-                            isSearchVisible = false;
-
-                            // Reset search
-                            if (searchInput) searchInput.value = '';
-                            filterProjects('');
-                            if (searchResults) searchResults.classList.add('hidden');
-                        }
-                    }
-                }
-
-                // Handle scroll events for sticky behavior
+                // Make search sticky when scrolling
                 window.addEventListener('scroll', function() {
-                    const currentScrollY = window.scrollY;
+                    if (stickySearch && projectsHeading) {
+                        const headingRect = projectsHeading.getBoundingClientRect();
+                        const headingBottom = headingRect.bottom;
 
-                    // Show search bar when scrolling up past hero section
-                    if (currentScrollY > 300 && currentScrollY < lastScrollY && !isSearchVisible) {
-                        toggleSearchBar(true);
+                        if (headingBottom < 0) {
+                            // We've scrolled past the heading, make search sticky
+                            stickySearch.classList.add('fixed', 'top-16', 'z-40');
+                            stickySearch.classList.remove('relative');
+
+                            // Add padding to prevent content jump
+                            if (!document.getElementById('searchSpacer')) {
+                                const spacer = document.createElement('div');
+                                spacer.id = 'searchSpacer';
+                                spacer.style.height = stickySearch.offsetHeight + 'px';
+                                stickySearch.parentNode.insertBefore(spacer, stickySearch.nextSibling);
+                            }
+                        } else {
+                            // We're at or above the heading, return search to normal position
+                            stickySearch.classList.remove('fixed', 'top-16', 'z-40');
+                            stickySearch.classList.add('relative');
+
+                            // Remove the spacer if it exists
+                            const spacer = document.getElementById('searchSpacer');
+                            if (spacer) spacer.remove();
+                        }
                     }
-
-                    // Hide search bar when scrolling down significantly
-                    if (currentScrollY > lastScrollY + 50 && isSearchVisible && searchInput.value === '') {
-                        toggleSearchBar(false);
-                    }
-
-                    lastScrollY = currentScrollY;
                 });
 
                 // Clear search button
@@ -303,10 +273,13 @@
                         }, 300);
                     });
 
-                    // Handle escape key to close search
+                    // Handle escape key to clear search
                     searchInput.addEventListener('keydown', function(e) {
                         if (e.key === 'Escape') {
-                            toggleSearchBar(false);
+                            searchInput.value = '';
+                            clearSearch.classList.add('hidden');
+                            filterProjects('');
+                            searchResults.classList.add('hidden');
                         }
                     });
                 }
@@ -375,17 +348,7 @@
                     }
                 }
 
-                // Close search when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (isSearchVisible &&
-                        !stickySearch.contains(e.target) &&
-                        e.target !== showSearch &&
-                        !showSearch.contains(e.target)) {
-                        if (searchInput.value === '') {
-                            toggleSearchBar(false);
-                        }
-                    }
-                });
+                // No need to close search when clicking outside since it's always visible
             });
 
             // Animate elements on scroll
