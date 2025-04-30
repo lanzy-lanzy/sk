@@ -8,16 +8,107 @@
         <h1 class="text-3xl font-bold text-tertiary">
             <i class="fas fa-tachometer-alt mr-2"></i>Admin Dashboard
         </h1>
-   
+
     </div>
 
-<!-- Add search form -->
+<!-- Enhanced global search form with advanced filters -->
     <form method="get" class="mb-6">
-        <div class="flex flex-col sm:flex-row">
-            <input type="text" name="search" value="{{ search_query }}" placeholder="Search chairmen or projects..." class="flex-grow p-2 border rounded-lg sm:rounded-l-lg sm:rounded-r-none mb-2 sm:mb-0">
-            <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded-lg sm:rounded-l-none sm:rounded-r-lg hover:bg-quaternary transition duration-300">
-                <i class="fas fa-search mr-2"></i>Search
-            </button>
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-tertiary">
+            <h3 class="text-lg font-semibold mb-3 text-tertiary"><i class="fas fa-search mr-2"></i>Advanced Search</h3>
+
+            <!-- Basic search -->
+            <div class="flex flex-col sm:flex-row mb-4">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search chairmen, projects, budgets..."
+                    class="flex-grow p-2 border rounded-lg sm:rounded-l-lg sm:rounded-r-none mb-2 sm:mb-0 focus:ring-2 focus:ring-tertiary focus:outline-none">
+                <button type="submit" class="bg-tertiary text-white px-4 py-2 rounded-lg sm:rounded-l-none sm:rounded-r-lg hover:bg-quaternary transition duration-300">
+                    <i class="fas fa-search mr-2"></i>Search
+                </button>
+            </div>
+
+            <!-- Advanced filters - collapsible -->
+            <div class="mb-2">
+                <button type="button" id="toggleAdvancedSearch" class="text-tertiary hover:text-quaternary transition duration-300 text-sm flex items-center">
+                    <i class="fas fa-filter mr-1"></i> Advanced Filters
+                    <i class="fas fa-chevron-down ml-1 transition-transform duration-300" id="filterChevron"></i>
+                </button>
+            </div>
+
+            <div id="advancedSearchOptions" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <!-- Date range filters -->
+                    <div class="flex flex-col">
+                        <label for="date_from" class="text-sm text-gray-600 mb-1">From Date:</label>
+                        <input type="date" id="date_from" name="date_from" value="{{ date_from }}"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="date_to" class="text-sm text-gray-600 mb-1">To Date:</label>
+                        <input type="date" id="date_to" name="date_to" value="{{ date_to }}"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                    </div>
+
+                    <!-- Status filter -->
+                    <div class="flex flex-col">
+                        <label for="status" class="text-sm text-gray-600 mb-1">Project Status:</label>
+                        <select id="status" name="status"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                            <option value="">All Statuses</option>
+                            <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="not_started" {% if status == 'not_started' %}selected{% endif %}>Not Started</option>
+                        </select>
+                    </div>
+
+                    <!-- Budget range filters -->
+                    <div class="flex flex-col">
+                        <label for="min_budget" class="text-sm text-gray-600 mb-1">Min Budget (₱):</label>
+                        <input type="number" id="min_budget" name="min_budget" value="{{ min_budget }}" placeholder="0"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="max_budget" class="text-sm text-gray-600 mb-1">Max Budget (₱):</label>
+                        <input type="number" id="max_budget" name="max_budget" value="{{ max_budget }}" placeholder="1000000"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                    </div>
+
+                    <!-- Year filter -->
+                    <div class="flex flex-col">
+                        <label for="year" class="text-sm text-gray-600 mb-1">Budget Year:</label>
+                        <select id="year" name="year"
+                            class="p-2 border rounded-lg focus:ring-2 focus:ring-tertiary focus:outline-none">
+                            <option value="">All Years</option>
+                            {% for year_option in available_years %}
+                                <option value="{{ year_option }}" {% if selected_year == year_option|stringformat:"i" %}selected{% endif %}>{{ year_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="reset" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300">
+                        <i class="fas fa-undo mr-1"></i>Reset
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-tertiary text-white rounded-lg hover:bg-quaternary transition duration-300">
+                        <i class="fas fa-filter mr-1"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+
+            {% if search_applied %}
+            <div class="mt-4 pt-3 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Found <span class="font-semibold">{{ results_count }}</span> results
+                    </p>
+                    <a href="{% url 'admin_dashboard' %}" class="text-sm text-tertiary hover:text-quaternary transition duration-300">
+                        <i class="fas fa-times-circle mr-1"></i>Clear all filters
+                    </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </form>
 
@@ -32,8 +123,29 @@
 
     <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-list-alt mr-2"></i>All Main Budgets</h2>
-        <div class="mb-4">
-            <input type="text" id="budgetSearch" placeholder="Search budgets..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+        <div class="mb-4 bg-white rounded-lg shadow-md p-4">
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
+                <div class="flex-grow mb-3 md:mb-0">
+                    <div class="relative">
+                        <input type="text" id="budgetSearch" placeholder="Search by year, chairman, address..."
+                            class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <select id="budgetYearFilter" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <option value="">All Years</option>
+                        {% for year_option in available_years %}
+                            <option value="{{ year_option }}">{{ year_option }}</option>
+                        {% endfor %}
+                    </select>
+                    <button id="resetBudgetFilters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300">
+                        <i class="fas fa-undo mr-1"></i>Reset
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto bg-white rounded-lg shadow-md">
             <div class="p-4 md:hidden">
@@ -76,8 +188,36 @@
 
     <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-project-diagram mr-2"></i>All Projects</h2>
-        <div class="mb-4">
-            <input type="text" id="projectSearch" placeholder="Search projects..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+        <div class="mb-4 bg-white rounded-lg shadow-md p-4">
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
+                <div class="flex-grow mb-3 md:mb-0">
+                    <div class="relative">
+                        <input type="text" id="projectSearch" placeholder="Search by name, chairman, status..."
+                            class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:flex md:space-x-2 gap-2 md:gap-0">
+                    <select id="projectStatusFilter" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="not-started">Not Started</option>
+                        <option value="ended">Ended</option>
+                    </select>
+                    <select id="projectBudgetFilter" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <option value="">All Budgets</option>
+                        <option value="low">Low (< ₱50,000)</option>
+                        <option value="medium">Medium (₱50,000 - ₱200,000)</option>
+                        <option value="high">High (> ₱200,000)</option>
+                    </select>
+                    <button id="resetProjectFilters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300 col-span-2 md:col-span-1">
+                        <i class="fas fa-undo mr-1"></i>Reset
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto bg-white rounded-lg shadow-md">
             <div class="p-4 md:hidden">
@@ -209,6 +349,15 @@
 
     <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-user-check mr-2"></i>Users Pending Approval</h2>
+        <div class="mb-4 bg-white rounded-lg shadow-md p-4">
+            <div class="relative">
+                <input type="text" id="pendingUserSearch" placeholder="Search by username, email..."
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
         <div class="overflow-x-auto bg-white rounded-lg shadow-md">
             <div class="p-4 md:hidden">
                 <p class="text-sm text-gray-500">Swipe horizontally to view all user details</p>
@@ -257,7 +406,31 @@
 
     <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-trophy mr-2"></i>Completed Projects</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="mb-4 bg-white rounded-lg shadow-md p-4">
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
+                <div class="flex-grow mb-3 md:mb-0">
+                    <div class="relative">
+                        <input type="text" id="completedProjectSearch" placeholder="Search completed projects..."
+                            class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <select id="completedProjectSort" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="budget-desc">Highest Budget</option>
+                        <option value="budget-asc">Lowest Budget</option>
+                    </select>
+                    <button id="resetCompletedFilters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300">
+                        <i class="fas fa-undo mr-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="completedProjectsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {% for project in all_projects %}
                 {% if project.status == 'completed' %}
                 <div class="bg-white rounded-lg shadow-md overflow-hidden border border-green-200 hover:shadow-lg transition-all duration-300">
@@ -320,7 +493,18 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4 text-tertiary"><i class="fas fa-users mr-2"></i>Chairmen</h2>
+        <div class="mb-4 bg-white rounded-lg shadow-md p-4">
+            <div class="relative">
+                <input type="text" id="chairmenSearch" placeholder="Search by name, email, projects..."
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+        <div id="chairmenContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {% for chairman in chairmen %}
             <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 border-t-4 border-tertiary">
                 <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-tertiary"><i class="fas fa-user-circle mr-2"></i>{{ chairman.get_full_name|title }}</h2>
@@ -344,9 +528,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Main Budgets search functionality
-            const searchInput = document.getElementById('budgetSearch');
-            const budgetTableRows = document.querySelector('#mainBudgetsTable tbody').querySelectorAll('tr');
+            // Toggle advanced search options
+            const toggleAdvancedSearch = document.getElementById('toggleAdvancedSearch');
+            const advancedSearchOptions = document.getElementById('advancedSearchOptions');
+            const filterChevron = document.getElementById('filterChevron');
+
+            if (toggleAdvancedSearch && advancedSearchOptions) {
+                toggleAdvancedSearch.addEventListener('click', function() {
+                    advancedSearchOptions.classList.toggle('hidden');
+                    filterChevron.classList.toggle('transform');
+                    filterChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            // ===== MAIN BUDGETS SEARCH =====
+            const budgetSearch = document.getElementById('budgetSearch');
+            const budgetYearFilter = document.getElementById('budgetYearFilter');
+            const resetBudgetFilters = document.getElementById('resetBudgetFilters');
+            const budgetTableRows = document.querySelector('#mainBudgetsTable tbody')?.querySelectorAll('tr');
 
             function updateBudgetTotals(visibleRows) {
                 let totalBudget = 0;
@@ -366,15 +565,22 @@
                 document.getElementById('remainingBudgetSum').textContent = '₱' + remainingBudget.toLocaleString();
             }
 
-            function searchBudgetTable() {
-                const searchTerm = searchInput.value.toLowerCase();
+            function filterBudgetTable() {
+                const searchTerm = budgetSearch?.value.toLowerCase() || '';
+                const yearFilter = budgetYearFilter?.value || '';
+
+                if (!budgetTableRows) return;
 
                 budgetTableRows.forEach(row => {
-                    const text = Array.from(row.children)
+                    const yearCell = row.children[0].textContent.trim();
+                    const rowText = Array.from(row.children)
                         .map(cell => cell.textContent.toLowerCase())
                         .join(' ');
 
-                    if (text.includes(searchTerm)) {
+                    const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                    const matchesYear = yearFilter === '' || yearCell === yearFilter;
+
+                    if (matchesSearch && matchesYear) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
@@ -384,14 +590,33 @@
                 updateBudgetTotals(budgetTableRows);
             }
 
-            if (searchInput) {
-                searchInput.addEventListener('input', searchBudgetTable);
+            if (budgetSearch) {
+                budgetSearch.addEventListener('input', filterBudgetTable);
+            }
+
+            if (budgetYearFilter) {
+                budgetYearFilter.addEventListener('change', filterBudgetTable);
+            }
+
+            if (resetBudgetFilters) {
+                resetBudgetFilters.addEventListener('click', function() {
+                    if (budgetSearch) budgetSearch.value = '';
+                    if (budgetYearFilter) budgetYearFilter.value = '';
+                    filterBudgetTable();
+                });
+            }
+
+            // Initialize budget totals
+            if (budgetTableRows) {
                 updateBudgetTotals(budgetTableRows);
             }
 
-            // Projects search functionality
-            const projectSearchInput = document.getElementById('projectSearch');
-            const projectTableRows = document.querySelector('#projectsTable tbody').querySelectorAll('tr');
+            // ===== PROJECTS SEARCH =====
+            const projectSearch = document.getElementById('projectSearch');
+            const projectStatusFilter = document.getElementById('projectStatusFilter');
+            const projectBudgetFilter = document.getElementById('projectBudgetFilter');
+            const resetProjectFilters = document.getElementById('resetProjectFilters');
+            const projectTableRows = document.querySelector('#projectsTable tbody')?.querySelectorAll('tr');
 
             function updateProjectTotals(visibleRows) {
                 let totalBudget = 0;
@@ -406,22 +631,43 @@
                 document.getElementById('totalProjectBudget').textContent = '₱' + totalBudget.toLocaleString();
             }
 
-            function searchProjects() {
-                const searchTerm = projectSearchInput.value.toLowerCase();
+            function filterProjects() {
+                const searchTerm = projectSearch?.value.toLowerCase() || '';
+                const statusFilter = projectStatusFilter?.value || '';
+                const budgetFilter = projectBudgetFilter?.value || '';
+
+                if (!projectTableRows) return;
 
                 projectTableRows.forEach(row => {
-                    const searchableColumns = [
-                        row.children[0].textContent, // Name
-                        row.children[1].textContent, // Chairman
-                        row.children[2].textContent, // Budget
-                        row.children[3].textContent, // Start Date
-                        row.children[4].textContent, // End Date
-                        row.children[5].textContent.replace(/\s+/g, ' ').trim(), // Status
-                    ];
+                    // Extract data from row
+                    const name = row.children[0].textContent.toLowerCase();
+                    const chairman = row.children[1].textContent.toLowerCase();
+                    const budget = parseFloat(row.children[2].textContent.replace('₱', '').replace(/,/g, ''));
+                    const statusCell = row.children[5];
+                    const statusText = statusCell.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
 
-                    const text = searchableColumns.join(' ').toLowerCase();
+                    // Determine status
+                    let status = '';
+                    if (statusText.includes('completed')) status = 'completed';
+                    else if (statusText.includes('in progress')) status = 'in-progress';
+                    else if (statusText.includes('not started')) status = 'not-started';
+                    else if (statusText.includes('ended')) status = 'ended';
 
-                    if (text.includes(searchTerm)) {
+                    // Determine budget category
+                    let budgetCategory = '';
+                    if (budget < 50000) budgetCategory = 'low';
+                    else if (budget <= 200000) budgetCategory = 'medium';
+                    else budgetCategory = 'high';
+
+                    // Combine all searchable text
+                    const rowText = name + ' ' + chairman + ' ' + statusText;
+
+                    // Apply filters
+                    const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                    const matchesStatus = statusFilter === '' || status === statusFilter;
+                    const matchesBudget = budgetFilter === '' || budgetCategory === budgetFilter;
+
+                    if (matchesSearch && matchesStatus && matchesBudget) {
                         row.style.display = '';
                     } else {
                         row.style.display = 'none';
@@ -431,10 +677,208 @@
                 updateProjectTotals(projectTableRows);
             }
 
-            if (projectSearchInput) {
-                projectSearchInput.addEventListener('input', searchProjects);
+            if (projectSearch) {
+                projectSearch.addEventListener('input', filterProjects);
+            }
+
+            if (projectStatusFilter) {
+                projectStatusFilter.addEventListener('change', filterProjects);
+            }
+
+            if (projectBudgetFilter) {
+                projectBudgetFilter.addEventListener('change', filterProjects);
+            }
+
+            if (resetProjectFilters) {
+                resetProjectFilters.addEventListener('click', function() {
+                    if (projectSearch) projectSearch.value = '';
+                    if (projectStatusFilter) projectStatusFilter.value = '';
+                    if (projectBudgetFilter) projectBudgetFilter.value = '';
+                    filterProjects();
+                });
+            }
+
+            // Initialize project totals
+            if (projectTableRows) {
                 updateProjectTotals(projectTableRows);
             }
+
+            // ===== PENDING USERS SEARCH =====
+            const pendingUserSearch = document.getElementById('pendingUserSearch');
+            const pendingUserRows = document.querySelector('#pendingUsersTable tbody')?.querySelectorAll('tr');
+
+            function filterPendingUsers() {
+                const searchTerm = pendingUserSearch?.value.toLowerCase() || '';
+
+                if (!pendingUserRows) return;
+
+                let hasVisibleRows = false;
+
+                pendingUserRows.forEach(row => {
+                    // Skip the "No users pending approval" row
+                    if (row.cells.length === 1 && row.cells[0].colSpan > 1) {
+                        return;
+                    }
+
+                    const username = row.cells[0].textContent.toLowerCase();
+                    const email = row.cells.length > 1 ? row.cells[1].textContent.toLowerCase() : '';
+                    const dateJoined = row.cells.length > 2 ? row.cells[2].textContent.toLowerCase() : '';
+
+                    const rowText = username + ' ' + email + ' ' + dateJoined;
+
+                    if (searchTerm === '' || rowText.includes(searchTerm)) {
+                        row.style.display = '';
+                        hasVisibleRows = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show or hide the "No users" message
+                const noUsersRow = Array.from(pendingUserRows).find(row =>
+                    row.cells.length === 1 && row.cells[0].colSpan > 1);
+
+                if (noUsersRow) {
+                    noUsersRow.style.display = hasVisibleRows ? 'none' : '';
+                }
+            }
+
+            if (pendingUserSearch) {
+                pendingUserSearch.addEventListener('input', filterPendingUsers);
+            }
+
+            // ===== COMPLETED PROJECTS SEARCH =====
+            const completedProjectSearch = document.getElementById('completedProjectSearch');
+            const completedProjectSort = document.getElementById('completedProjectSort');
+            const resetCompletedFilters = document.getElementById('resetCompletedFilters');
+            const completedProjects = document.querySelectorAll('#completedProjectsContainer > div:not(.col-span-full)');
+
+            function filterAndSortCompletedProjects() {
+                const searchTerm = completedProjectSearch?.value.toLowerCase() || '';
+                const sortOption = completedProjectSort?.value || 'date-desc';
+
+                if (!completedProjects.length) return;
+
+                // First filter
+                let visibleProjects = [];
+                let hasVisibleProjects = false;
+
+                completedProjects.forEach(project => {
+                    const projectName = project.querySelector('h3')?.textContent.toLowerCase() || '';
+                    const chairman = project.querySelector('.fas.fa-user-tie')?.nextSibling?.textContent.toLowerCase() || '';
+                    const budget = project.querySelector('.fas.fa-money-bill-wave')?.nextSibling?.textContent.toLowerCase() || '';
+                    const date = project.querySelector('.fas.fa-calendar-check')?.nextSibling?.textContent.toLowerCase() || '';
+
+                    const projectText = projectName + ' ' + chairman + ' ' + budget + ' ' + date;
+
+                    if (searchTerm === '' || projectText.includes(searchTerm)) {
+                        project.style.display = '';
+                        visibleProjects.push(project);
+                        hasVisibleProjects = true;
+                    } else {
+                        project.style.display = 'none';
+                    }
+                });
+
+                // Then sort visible projects
+                if (visibleProjects.length > 0) {
+                    const container = document.getElementById('completedProjectsContainer');
+
+                    // Sort the visible projects
+                    visibleProjects.sort((a, b) => {
+                        if (sortOption === 'date-desc' || sortOption === 'date-asc') {
+                            const dateA = a.querySelector('.fas.fa-calendar-check')?.nextSibling?.textContent || '';
+                            const dateB = b.querySelector('.fas.fa-calendar-check')?.nextSibling?.textContent || '';
+
+                            // Convert dates for comparison (assuming format is "MMM D, YYYY")
+                            const timeA = new Date(dateA).getTime();
+                            const timeB = new Date(dateB).getTime();
+
+                            return sortOption === 'date-desc' ? timeB - timeA : timeA - timeB;
+                        } else {
+                            // Budget sorting
+                            const budgetTextA = a.querySelector('.fas.fa-money-bill-wave')?.nextSibling?.textContent || '';
+                            const budgetTextB = b.querySelector('.fas.fa-money-bill-wave')?.nextSibling?.textContent || '';
+
+                            const budgetA = parseFloat(budgetTextA.replace('₱', '').replace(/,/g, ''));
+                            const budgetB = parseFloat(budgetTextB.replace('₱', '').replace(/,/g, ''));
+
+                            return sortOption === 'budget-desc' ? budgetB - budgetA : budgetA - budgetB;
+                        }
+                    });
+
+                    // Reorder the DOM
+                    visibleProjects.forEach(project => {
+                        container.appendChild(project);
+                    });
+                }
+
+                // Show or hide the "No projects" message
+                const noProjectsMessage = document.querySelector('#completedProjectsContainer > p.col-span-full');
+                if (noProjectsMessage) {
+                    noProjectsMessage.style.display = hasVisibleProjects ? 'none' : 'block';
+                }
+            }
+
+            if (completedProjectSearch) {
+                completedProjectSearch.addEventListener('input', filterAndSortCompletedProjects);
+            }
+
+            if (completedProjectSort) {
+                completedProjectSort.addEventListener('change', filterAndSortCompletedProjects);
+            }
+
+            if (resetCompletedFilters) {
+                resetCompletedFilters.addEventListener('click', function() {
+                    if (completedProjectSearch) completedProjectSearch.value = '';
+                    if (completedProjectSort) completedProjectSort.value = 'date-desc';
+                    filterAndSortCompletedProjects();
+                });
+            }
+
+            // ===== CHAIRMEN SEARCH =====
+            const chairmenSearch = document.getElementById('chairmenSearch');
+            const chairmenCards = document.querySelectorAll('#chairmenContainer > div:not(.col-span-full)');
+
+            function filterChairmen() {
+                const searchTerm = chairmenSearch?.value.toLowerCase() || '';
+
+                if (!chairmenCards.length) return;
+
+                let hasVisibleChairmen = false;
+
+                chairmenCards.forEach(card => {
+                    const name = card.querySelector('h2')?.textContent.toLowerCase() || '';
+                    const email = card.querySelector('.fas.fa-envelope')?.nextSibling?.textContent.toLowerCase() || '';
+                    const projects = card.querySelector('ul')?.textContent.toLowerCase() || '';
+
+                    const cardText = name + ' ' + email + ' ' + projects;
+
+                    if (searchTerm === '' || cardText.includes(searchTerm)) {
+                        card.style.display = '';
+                        hasVisibleChairmen = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show or hide the "No chairmen" message
+                const noChairmenMessage = document.querySelector('#chairmenContainer > p.col-span-full');
+                if (noChairmenMessage) {
+                    noChairmenMessage.style.display = hasVisibleChairmen ? 'none' : 'block';
+                }
+            }
+
+            if (chairmenSearch) {
+                chairmenSearch.addEventListener('input', filterChairmen);
+            }
+
+            // Initialize all filters
+            filterBudgetTable();
+            filterProjects();
+            filterPendingUsers();
+            filterAndSortCompletedProjects();
+            filterChairmen();
         });
     </script>
 {% endblock %}
