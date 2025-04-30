@@ -708,8 +708,97 @@ def generate_pdf_report(response, user, projects):
     normal_style = ParagraphStyle('Normal', parent=styles['Normal'], fontSize=11, textColor=colors.HexColor("#2C3E50"), leading=14)
     subheading_style = ParagraphStyle('Subheading', parent=styles['Heading3'], fontSize=16, textColor=colors.HexColor("#16A085"), spaceBefore=12, spaceAfter=6)
 
-    # Add a decorative header
-    elements.append(Paragraph("SK Budget Report", title_style))
+    # Add Republic of the Philippines and Province of Zamboanga del Sur header
+    header_text_style = ParagraphStyle(
+        'HeaderText',
+        parent=styles['Normal'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#2C3E50"),
+        leading=14,
+        spaceBefore=0,
+        spaceAfter=0
+    )
+
+    elements.append(Paragraph("REPUBLIC OF THE PHILIPPINES", header_text_style))
+    elements.append(Paragraph("PROVINCE OF ZAMBOANGA DEL SUR", header_text_style))
+    elements.append(Paragraph("MUNICIPALITY OF DUMINGAG", header_text_style))
+
+    # Add barangay information if available
+    if user.address and 'Barangay' in user.address:
+        # Extract barangay name from address
+        try:
+            barangay_name = user.address.split('Barangay')[1].strip().split(',')[0].strip()
+            elements.append(Paragraph(f"BARANGAY {barangay_name.upper()}", header_text_style))
+        except:
+            # If we can't parse the address, just use the full address
+            elements.append(Paragraph(f"BARANGAY", header_text_style))
+    else:
+        elements.append(Paragraph("BARANGAY", header_text_style))
+
+    elements.append(Spacer(1, 0.1*inch))
+
+    # Add logos to the header
+    dumingag_logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'dumingag-logo-simple.jpg')
+
+    # Create a table for the header with logos
+    header_data = [[]]
+
+    # Add Dumingag logo on the left
+    if os.path.exists(dumingag_logo_path):
+        try:
+            # Try to load the image with PIL first to ensure it's valid
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(dumingag_logo_path)
+
+            # Convert to RGB if it's RGBA (transparent PNG)
+            if pil_img.mode == 'RGBA':
+                rgb_img = PILImage.new('RGB', pil_img.size, (255, 255, 255))
+                rgb_img.paste(pil_img, mask=pil_img.split()[3])
+
+                # Save to a temporary file
+                import tempfile
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                rgb_img.save(temp_file.name, 'JPEG')
+                temp_file.close()
+
+                # Use the temporary file for ReportLab
+                dumingag_logo = Image(temp_file.name)
+            else:
+                dumingag_logo = Image(dumingag_logo_path)
+
+            dumingag_logo.drawWidth = 0.8*inch
+            dumingag_logo.drawHeight = 0.8*inch
+            header_data[0].append(dumingag_logo)
+        except Exception as e:
+            print(f"Error loading Dumingag logo: {str(e)}")
+            header_data[0].append('')
+    else:
+        print(f"Dumingag logo not found at: {dumingag_logo_path}")
+        header_data[0].append('')
+
+    # Add title in the middle
+    header_data[0].append(Paragraph("SK Budget Report", title_style))
+
+    # Add barangay logo on the right (from user's logo)
+    if user.logo and hasattr(user.logo, 'path') and os.path.exists(user.logo.path):
+        barangay_logo = Image(user.logo.path)
+        barangay_logo.drawWidth = 0.8*inch
+        barangay_logo.drawHeight = 0.8*inch
+        header_data[0].append(barangay_logo)
+    else:
+        header_data[0].append('')
+
+    # Create the header table
+    header_table = Table(header_data, colWidths=[1*inch, 5*inch, 1*inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+
+    elements.append(header_table)
     elements.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor("#3498DB"), spaceAfter=0.2*inch))
 
     # Chairman information
@@ -849,10 +938,100 @@ def export_project_pdf(request, project_id):
         spaceAfter=20,
     )
 
+    header_text_style = ParagraphStyle(
+        'HeaderText',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#1a5f7a'),
+        leading=14,
+        spaceBefore=0,
+        spaceAfter=0
+    )
+
     elements = []
 
-    # Title
-    elements.append(Paragraph(project.name, title_style))
+    # Add Republic of the Philippines, Province of Zamboanga del Sur, and Municipality of Dumingag header
+    elements.append(Paragraph("REPUBLIC OF THE PHILIPPINES", header_text_style))
+    elements.append(Paragraph("PROVINCE OF ZAMBOANGA DEL SUR", header_text_style))
+    elements.append(Paragraph("MUNICIPALITY OF DUMINGAG", header_text_style))
+
+    # Add barangay information if available
+    if project.chairman.address and 'Barangay' in project.chairman.address:
+        # Extract barangay name from address
+        try:
+            barangay_name = project.chairman.address.split('Barangay')[1].strip().split(',')[0].strip()
+            elements.append(Paragraph(f"BARANGAY {barangay_name.upper()}", header_text_style))
+        except:
+            # If we can't parse the address, just use the full address
+            elements.append(Paragraph(f"BARANGAY", header_text_style))
+    else:
+        elements.append(Paragraph("BARANGAY", header_text_style))
+
+    elements.append(Spacer(1, 0.1*inch))
+
+    # Add logos to the header
+    dumingag_logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'dumingag-logo.png')
+
+    # Create a table for the header with logos
+    header_data = [[]]
+
+    # Add Dumingag logo on the left
+    if os.path.exists(dumingag_logo_path):
+        try:
+            # Try to load the image with PIL first to ensure it's valid
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(dumingag_logo_path)
+
+            # Convert to RGB if it's RGBA (transparent PNG)
+            if pil_img.mode == 'RGBA':
+                rgb_img = PILImage.new('RGB', pil_img.size, (255, 255, 255))
+                rgb_img.paste(pil_img, mask=pil_img.split()[3])
+
+                # Save to a temporary file
+                import tempfile
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                rgb_img.save(temp_file.name, 'JPEG')
+                temp_file.close()
+
+                # Use the temporary file for ReportLab
+                dumingag_logo = Image(temp_file.name)
+            else:
+                dumingag_logo = Image(dumingag_logo_path)
+
+            dumingag_logo.drawWidth = 0.8*inch
+            dumingag_logo.drawHeight = 0.8*inch
+            header_data[0].append(dumingag_logo)
+        except Exception as e:
+            print(f"Error loading Dumingag logo: {str(e)}")
+            header_data[0].append('')
+    else:
+        print(f"Dumingag logo not found at: {dumingag_logo_path}")
+        header_data[0].append('')
+
+    # Add title in the middle
+    header_data[0].append(Paragraph(project.name, title_style))
+
+    # Add barangay logo on the right (from chairman's logo)
+    if project.chairman.logo and hasattr(project.chairman.logo, 'path') and os.path.exists(project.chairman.logo.path):
+        barangay_logo = Image(project.chairman.logo.path)
+        barangay_logo.drawWidth = 0.8*inch
+        barangay_logo.drawHeight = 0.8*inch
+        header_data[0].append(barangay_logo)
+    else:
+        header_data[0].append('')
+
+    # Create the header table
+    header_table = Table(header_data, colWidths=[1*inch, 5*inch, 1*inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+
+    elements.append(header_table)
     elements.append(HRFlowable(
         width="100%",
         thickness=2,
@@ -957,15 +1136,7 @@ def export_project_pdf(request, project_id):
     # Add signature section
     elements.append(PageBreak())
 
-    # Add logo
-    logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')  # Adjust path as needed
-    if os.path.exists(logo_path):
-        logo = Image(logo_path)
-        logo.drawWidth = 150
-        logo.drawHeight = 150
-        elements.append(logo)
-
-    elements.append(Spacer(1, 3*inch))  # Adjust space between logo and signature
+    elements.append(Spacer(1, 1*inch))  # Space before signature
 
     # Report Date
     date_style = ParagraphStyle(
@@ -1183,7 +1354,80 @@ def generate_comprehensive_report(request):
         spaceAfter=30,
         alignment=TA_CENTER
     )
-    elements.append(Paragraph("Comprehensive Project Report", title_style))
+
+    # Add Republic of the Philippines and Province of Zamboanga del Sur header
+    header_text_style = ParagraphStyle(
+        'HeaderText',
+        parent=styles['Normal'],
+        fontSize=12,
+        alignment=TA_CENTER,
+        textColor=colors.black,
+        leading=14,
+        spaceBefore=0,
+        spaceAfter=0
+    )
+
+    elements.append(Paragraph("REPUBLIC OF THE PHILIPPINES", header_text_style))
+    elements.append(Paragraph("PROVINCE OF ZAMBOANGA DEL SUR", header_text_style))
+    elements.append(Paragraph("MUNICIPALITY OF DUMINGAG", header_text_style))
+    elements.append(Paragraph("BARANGAY", header_text_style))
+    elements.append(Spacer(1, 0.1*inch))
+
+    # Add logos to the header
+    dumingag_logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'dumingag-logo.png')
+
+    # Create a table for the header with logos
+    header_data = [[]]
+
+    # Add Dumingag logo on the left
+    if os.path.exists(dumingag_logo_path):
+        try:
+            # Try to load the image with PIL first to ensure it's valid
+            from PIL import Image as PILImage
+            pil_img = PILImage.open(dumingag_logo_path)
+
+            # Convert to RGB if it's RGBA (transparent PNG)
+            if pil_img.mode == 'RGBA':
+                rgb_img = PILImage.new('RGB', pil_img.size, (255, 255, 255))
+                rgb_img.paste(pil_img, mask=pil_img.split()[3])
+
+                # Save to a temporary file
+                import tempfile
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                rgb_img.save(temp_file.name, 'JPEG')
+                temp_file.close()
+
+                # Use the temporary file for ReportLab
+                dumingag_logo = Image(temp_file.name)
+            else:
+                dumingag_logo = Image(dumingag_logo_path)
+
+            dumingag_logo.drawWidth = 0.8*inch
+            dumingag_logo.drawHeight = 0.8*inch
+            header_data[0].append(dumingag_logo)
+        except Exception as e:
+            print(f"Error loading Dumingag logo: {str(e)}")
+            header_data[0].append('')
+    else:
+        print(f"Dumingag logo not found at: {dumingag_logo_path}")
+        header_data[0].append('')
+
+    # Add title in the middle
+    header_data[0].append(Paragraph("Comprehensive Project Report", title_style))
+
+    # For comprehensive report, we don't have a specific user's logo, so leave it empty
+    header_data[0].append('')
+
+    # Create the header table
+    header_table = Table(header_data, colWidths=[1*inch, 6.5*inch, 1*inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+
+    elements.append(header_table)
 
     # Get all chairmen and their projects
     chairmen = User.objects.filter(is_chairman=True).order_by('last_name', 'first_name')
