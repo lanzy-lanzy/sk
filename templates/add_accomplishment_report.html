@@ -26,8 +26,10 @@
                         </div>
                     </div>
                     <div>
-                        <label for="{{ image_form.images.id_for_label }}" class="block text-sm font-medium text-gray-700">Upload Images</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <label for="{{ image_form.images.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Upload Images <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md" id="image-upload-area">
                             <div class="space-y-1 text-center">
                                 <div class="flex text-sm text-gray-600">
                                     <label for="{{ image_form.images.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-tertiary hover:text-quaternary focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-tertiary">
@@ -36,7 +38,11 @@
                                     </label>
                                     <p class="pl-1">or drag and drop</p>
                                 </div>
-                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each (Required)</p>
+                                <div id="image-error" class="text-red-500 text-xs mt-1 hidden">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    Please upload at least one image
+                                </div>
                             </div>
                         </div>
                         <div id="image-preview" class="mt-4 hidden">
@@ -57,35 +63,71 @@
     </div>
 
     <script>
-        document.getElementById('{{ image_form.images.id_for_label }}').onchange = function(e) {
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('{{ image_form.images.id_for_label }}');
             const previewContainer = document.getElementById('image-preview');
             const previewGrid = document.getElementById('preview-grid');
-            const files = e.target.files;
-            
-            // Clear previous previews
-            previewGrid.innerHTML = '';
-            
-            if (files.length > 0) {
-                previewContainer.classList.remove('hidden');
-                
-                Array.from(files).forEach(file => {
-                    const reader = new FileReader();
-                    const previewDiv = document.createElement('div');
-                    const previewImg = document.createElement('img');
-                    
-                    previewDiv.className = 'relative aspect-square';
-                    previewImg.className = 'w-full h-full object-cover rounded-lg shadow-lg';
-                    
-                    reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        previewDiv.appendChild(previewImg);
-                        previewGrid.appendChild(previewDiv);
-                    }
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                previewContainer.classList.add('hidden');
-            }
-        };
+            const imageError = document.getElementById('image-error');
+            const imageUploadArea = document.getElementById('image-upload-area');
+            const form = document.querySelector('form');
+
+            // Add required attribute to image input
+            imageInput.setAttribute('required', 'required');
+
+            // Handle image selection
+            imageInput.onchange = function(e) {
+                const files = e.target.files;
+
+                // Clear previous previews
+                previewGrid.innerHTML = '';
+
+                if (files.length > 0) {
+                    // Hide error message and reset border
+                    imageError.classList.add('hidden');
+                    imageUploadArea.classList.remove('border-red-500');
+                    imageUploadArea.classList.add('border-gray-300');
+
+                    // Show preview
+                    previewContainer.classList.remove('hidden');
+
+                    Array.from(files).forEach(file => {
+                        const reader = new FileReader();
+                        const previewDiv = document.createElement('div');
+                        const previewImg = document.createElement('img');
+
+                        previewDiv.className = 'relative aspect-square';
+                        previewImg.className = 'w-full h-full object-cover rounded-lg shadow-lg';
+
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewDiv.appendChild(previewImg);
+                            previewGrid.appendChild(previewDiv);
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+            };
+
+            // Form submission validation
+            form.addEventListener('submit', function(e) {
+                const files = imageInput.files;
+
+                if (files.length === 0) {
+                    e.preventDefault();
+
+                    // Show error message
+                    imageError.classList.remove('hidden');
+
+                    // Highlight upload area
+                    imageUploadArea.classList.remove('border-gray-300');
+                    imageUploadArea.classList.add('border-red-500');
+
+                    // Scroll to error
+                    imageUploadArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
     </script>
 {% endblock %}
