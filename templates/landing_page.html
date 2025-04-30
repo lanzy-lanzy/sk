@@ -39,7 +39,7 @@
             <nav class="glass-effect text-tertiary py-4">
                 <div class="container mx-auto px-4 flex justify-between items-center">
                     <h1 class="text-xl sm:text-2xl font-bold flex items-center">
-                        <i class="fas fa-coins mr-2 text-tertiary"></i>
+                        <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-8 sm:h-10 mr-3">
                         <span class="bg-clip-text text-transparent bg-gradient-to-r from-tertiary to-quaternary">SK Budget</span>
                     </h1>
                     <div class="flex items-center space-x-2 sm:space-x-4">
@@ -60,6 +60,9 @@
             <!-- Hero Section -->
             <section id="getStartedSection" class="container mx-auto px-4 py-8 sm:py-16">
                 <div class="text-center max-w-4xl mx-auto">
+                    <div class="flex justify-center mb-6">
+                        <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-24 sm:h-32 md:h-40">
+                    </div>
                     <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-tertiary mb-4 sm:mb-6 leading-tight">
                         <span class="block">Empowering Youth Leadership</span>
                         <span class="block text-xl sm:text-2xl md:text-3xl text-quaternary mt-2">Through Efficient Budget Management</span>
@@ -68,6 +71,66 @@
                     <a href="{% url 'register' %}" class="inline-block bg-tertiary hover:bg-quaternary text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-base sm:text-xl transition duration-300 transform hover:scale-105 hover:shadow-lg">
                         <i class="fas fa-rocket mr-2"></i>Get Started Today
                     </a>
+                </div>
+            </section>
+
+            <!-- Mission and Vision Section -->
+            <section class="container mx-auto px-4 py-8 sm:py-16">
+                <h2 class="text-3xl sm:text-4xl font-bold text-tertiary text-center mb-8 sm:mb-12">
+                    <i class="fas fa-star mr-2"></i>Our Purpose
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Mission Card -->
+                    <div class="glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl relative">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-tertiary/10 rounded-bl-full z-0"></div>
+                        <div class="absolute bottom-0 left-0 w-16 h-16 bg-tertiary/10 rounded-tr-full z-0"></div>
+                        <div class="bg-tertiary p-4 text-center relative z-10">
+                            <h3 class="text-2xl sm:text-3xl font-bold text-white">
+                                <i class="fas fa-bullseye mr-2"></i>Our Mission
+                            </h3>
+                        </div>
+                        <div class="p-6 sm:p-8 relative z-10">
+                            <div class="flex justify-center mb-6">
+                                <div class="w-20 h-20 rounded-full bg-tertiary/20 flex items-center justify-center shadow-lg border-2 border-tertiary/30">
+                                    <i class="fas fa-compass text-4xl text-tertiary"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-center text-lg leading-relaxed">
+                                To empower Sangguniang Kabataan officials with efficient budget management tools that promote transparency,
+                                accountability, and effective governance, enabling them to better serve the youth and communities of Dumingag,
+                                Zamboanga del Sur.
+                            </p>
+                            <div class="flex justify-center mt-6">
+                                <div class="h-1 w-16 bg-tertiary rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vision Card -->
+                    <div class="glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl relative">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-quaternary/10 rounded-bl-full z-0"></div>
+                        <div class="absolute bottom-0 left-0 w-16 h-16 bg-quaternary/10 rounded-tr-full z-0"></div>
+                        <div class="bg-quaternary p-4 text-center relative z-10">
+                            <h3 class="text-2xl sm:text-3xl font-bold text-white">
+                                <i class="fas fa-eye mr-2"></i>Our Vision
+                            </h3>
+                        </div>
+                        <div class="p-6 sm:p-8 relative z-10">
+                            <div class="flex justify-center mb-6">
+                                <div class="w-20 h-20 rounded-full bg-quaternary/20 flex items-center justify-center shadow-lg border-2 border-quaternary/30">
+                                    <i class="fas fa-lightbulb text-4xl text-quaternary"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 text-center text-lg leading-relaxed">
+                                To be the leading platform for youth governance in the Philippines, fostering a generation of
+                                responsible and innovative SK leaders who drive sustainable community development through
+                                transparent and effective resource management.
+                            </p>
+                            <div class="flex justify-center mt-6">
+                                <div class="h-1 w-16 bg-quaternary rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -106,62 +169,48 @@
                     </div>
                 </div>
                 <div id="projectsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-                    {% for project in completed_projects %}
-                    <div class="project-card glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
-                         data-title="{{ project.title|lower }}"
-                         data-chairman="{{ project.chairman_name|lower }}"
-                         data-location="{{ project.address|lower }}"
-                         data-date="{{ project.completion_date|date:"F d, Y"|lower }}"
-                         data-description="{% if project.description %}{{ project.description|lower }}{% endif %}">
+                    {% regroup completed_projects by address as barangay_projects %}
+                    {% for barangay in barangay_projects %}
+                    <div class="barangay-card glass-effect rounded-3xl overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-xl cursor-pointer"
+                         onclick="openProjectsModal('{{ barangay.grouper }}')"
+                         data-barangay="{{ barangay.grouper|lower }}">
                         <div class="h-56 bg-tertiary relative overflow-hidden">
-                            {% if project.image %}
-                                <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-full object-cover">
+                            {% with first_project=barangay.list|first %}
+                            {% if first_project.chairman_logo %}
+                                <img src="{{ first_project.chairman_logo.url }}" alt="{{ barangay.grouper }}" class="w-full h-full object-contain p-4">
                             {% else %}
                                 <div class="w-full h-full flex items-center justify-center bg-quaternary/80">
-                                    <i class="fas fa-project-diagram text-7xl text-white opacity-50"></i>
+                                    <i class="fas fa-landmark text-7xl text-white opacity-50"></i>
                                 </div>
                             {% endif %}
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                                <h3 class="text-2xl font-bold text-white project-title">{{ project.title }}</h3>
+                                <h3 class="text-2xl font-bold text-white barangay-name">{{ barangay.grouper }}</h3>
                             </div>
+                            {% endwith %}
                         </div>
                         <div class="p-6 space-y-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-tertiary/10 rounded-full p-3">
+                                    <i class="fas fa-project-diagram text-tertiary text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Completed Projects</p>
+                                    <p class="font-semibold text-tertiary project-count">{{ barangay.list|length }}</p>
+                                </div>
+                            </div>
                             <div class="flex items-center space-x-4">
                                 <div class="bg-tertiary/10 rounded-full p-3">
                                     <i class="fas fa-user-tie text-tertiary text-xl"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Chairman</p>
-                                    <p class="font-semibold text-tertiary project-chairman">{{ project.chairman_name }}</p>
+                                    <p class="font-semibold text-tertiary project-chairman">{{ barangay.list.0.chairman_name }}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="bg-tertiary/10 rounded-full p-3">
-                                    <i class="fas fa-map-marker-alt text-tertiary text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Location</p>
-                                    <p class="font-semibold text-tertiary project-location">{{ project.address }}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="bg-tertiary/10 rounded-full p-3">
-                                    <i class="fas fa-calendar-check text-tertiary text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Completed</p>
-                                    <p class="font-semibold text-tertiary project-date">{{ project.completion_date|date:"F d, Y" }}</p>
-                                </div>
-                            </div>
-                            {% if project.description %}
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <p class="text-sm text-gray-600 line-clamp-3 project-description">{{ project.description }}</p>
-                            </div>
-                            {% endif %}
                             <div class="flex justify-center mt-4 pt-4 border-t border-gray-200">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    <i class="fas fa-check-circle mr-1"></i>Completed Project
-                                </span>
+                                <button class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-tertiary text-white hover:bg-quaternary transition-colors duration-300">
+                                    <i class="fas fa-eye mr-1"></i>View Projects
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -172,6 +221,32 @@
                         <p class="mt-4 text-gray-500">Completed projects will appear here once chairmen mark their projects as completed.</p>
                     </div>
                     {% endfor %}
+                </div>
+
+                <!-- Projects Modal -->
+                <div id="projectsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-y-auto">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                            <div class="bg-tertiary text-white px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <h3 class="text-2xl font-bold" id="modalBarangayTitle">
+                                    <i class="fas fa-landmark mr-3"></i>Barangay Projects
+                                </h3>
+                                <button type="button" onclick="closeProjectsModal()" class="text-white hover:text-gray-200 focus:outline-none">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div id="modalProjectsList" class="space-y-6">
+                                    <!-- Projects will be loaded here dynamically -->
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button type="button" onclick="closeProjectsModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-tertiary text-base font-medium text-white hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary sm:ml-3 sm:w-auto sm:text-sm">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -187,15 +262,183 @@
                     </a>
                 </div>
             </section>
+
+            <!-- Data Privacy Act Section -->
+            <section id="privacySection" class="container mx-auto px-4 py-8 sm:py-12">
+                <div class="glass-effect rounded-3xl p-6 sm:p-8 max-w-5xl mx-auto">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="bg-tertiary/10 rounded-full p-3">
+                            <i class="fas fa-shield-alt text-tertiary text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-tertiary ml-3">Data Privacy Act of 2012</h2>
+                    </div>
+
+                    <div class="text-gray-700 text-sm sm:text-base space-y-4">
+                        <p class="text-center mb-4">
+                            In compliance with Republic Act No. 10173, also known as the Data Privacy Act of 2012
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white/50 p-4 rounded-xl">
+                                <h3 class="font-semibold text-tertiary mb-2 flex items-center">
+                                    <i class="fas fa-info-circle mr-2"></i>Information We Collect
+                                </h3>
+                                <p>
+                                    We collect personal information necessary for SK budget management, including names, contact details,
+                                    addresses, and other information required for user registration and system functionality.
+                                </p>
+                            </div>
+
+                            <div class="bg-white/50 p-4 rounded-xl">
+                                <h3 class="font-semibold text-tertiary mb-2 flex items-center">
+                                    <i class="fas fa-lock mr-2"></i>How We Protect Your Data
+                                </h3>
+                                <p>
+                                    We implement appropriate data security measures to protect your personal information from unauthorized
+                                    access, alteration, disclosure, or destruction.
+                                </p>
+                            </div>
+
+                            <div class="bg-white/50 p-4 rounded-xl">
+                                <h3 class="font-semibold text-tertiary mb-2 flex items-center">
+                                    <i class="fas fa-file-contract mr-2"></i>Your Rights
+                                </h3>
+                                <p>
+                                    You have the right to access, correct, and request deletion of your personal data, subject to
+                                    any legal restrictions. Contact the system administrator for assistance with these requests.
+                                </p>
+                            </div>
+
+                            <div class="bg-white/50 p-4 rounded-xl">
+                                <h3 class="font-semibold text-tertiary mb-2 flex items-center">
+                                    <i class="fas fa-handshake mr-2"></i>Consent
+                                </h3>
+                                <p>
+                                    By using this system, you consent to the collection and processing of your personal information
+                                    as described in this privacy notice and in accordance with the Data Privacy Act of 2012.
+                                </p>
+                            </div>
+                        </div>
+
+                        <p class="text-center text-xs sm:text-sm mt-4 text-gray-600">
+                            For more information about the Data Privacy Act, visit the
+                            <a href="https://www.privacy.gov.ph/" target="_blank" class="text-tertiary hover:underline">
+                                National Privacy Commission website
+                            </a>.
+                        </p>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer class="glass-effect text-tertiary py-8 mt-16">
             <div class="container mx-auto px-4 text-center">
+                <div class="flex justify-center items-center mb-4">
+                    <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-12">
+                </div>
                 <p><i class="far fa-copyright mr-2"></i>2024 SK Budget. All rights reserved.</p>
+                <p class="mt-2 text-sm">Republic of the Philippines, Province of Zamboanga del Sur, Municipality of Dumingag</p>
             </div>
         </footer>
 
         <script>
+            // Store all projects data for modal display
+            const allProjects = [
+                {% for project in completed_projects %}
+                {
+                    title: "{{ project.title }}",
+                    chairman: "{{ project.chairman_name }}",
+                    address: "{{ project.address }}",
+                    date: "{{ project.completion_date|date:'F d, Y' }}",
+                    description: "{% if project.description %}{{ project.description|escapejs }}{% endif %}",
+                    image: "{% if project.image %}{{ project.image.url }}{% endif %}"
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            // Function to open the projects modal
+            function openProjectsModal(barangayName) {
+                // Set the modal title
+                document.getElementById('modalBarangayTitle').innerHTML = `<i class="fas fa-landmark mr-3"></i>Barangay ${barangayName}`;
+
+                // Filter projects for this barangay
+                const barangayProjects = allProjects.filter(project => project.address === barangayName);
+
+                // Generate HTML for each project
+                let projectsHTML = '';
+
+                if (barangayProjects.length > 0) {
+                    barangayProjects.forEach(project => {
+                        projectsHTML += `
+                            <div class="project-item border-b border-gray-200 pb-6">
+                                <div class="flex flex-col md:flex-row">
+                                    <div class="md:w-1/3 mb-4 md:mb-0 md:mr-6">
+                                        ${project.image ?
+                                            `<img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover rounded-lg">` :
+                                            `<div class="w-full h-48 flex items-center justify-center bg-quaternary/30 rounded-lg">
+                                                <i class="fas fa-project-diagram text-5xl text-tertiary opacity-50"></i>
+                                            </div>`
+                                        }
+                                    </div>
+                                    <div class="md:w-2/3">
+                                        <h4 class="text-xl font-bold text-tertiary mb-2">${project.title}</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-user-tie text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Chairman</p>
+                                                    <p class="text-sm font-medium">${project.chairman}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-calendar-check text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Completed</p>
+                                                    <p class="text-sm font-medium">${project.date}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">${project.description || 'No description available.'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    projectsHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-info-circle text-4xl text-tertiary/50 mb-4"></i>
+                            <p class="text-lg text-gray-600">No projects found for this barangay.</p>
+                        </div>
+                    `;
+                }
+
+                // Update the modal content
+                document.getElementById('modalProjectsList').innerHTML = projectsHTML;
+
+                // Show the modal
+                const modal = document.getElementById('projectsModal');
+                modal.classList.remove('hidden');
+            }
+
+            // Function to close the projects modal
+            function closeProjectsModal() {
+                const modal = document.getElementById('projectsModal');
+                modal.classList.add('hidden');
+            }
+
+            // Close modal when clicking outside
+            document.addEventListener('click', function(event) {
+                const modal = document.getElementById('projectsModal');
+                if (event.target === modal) {
+                    closeProjectsModal();
+                }
+            });
+
             document.addEventListener('DOMContentLoaded', function() {
                 // Elements
                 const stickySearch = document.getElementById('stickySearch');
@@ -204,12 +447,12 @@
                 const searchResults = document.getElementById('searchResults');
                 const resultsCount = document.getElementById('resultsCount');
                 const noResults = document.getElementById('noResults');
-                const projectCards = document.querySelectorAll('.project-card');
+                const barangayCards = document.querySelectorAll('.barangay-card');
                 const projectsContainer = document.getElementById('projectsContainer');
 
                 // Variables to track state
                 let searchDebounceTimer;
-                let projectsSection = document.querySelector('.project-card')?.closest('section');
+                let projectsSection = document.querySelector('.barangay-card')?.closest('section');
                 // Find the heading by looking for the h2 that contains the trophy icon
                 let projectsHeading = document.querySelector('h2 i.fa-trophy')?.closest('h2');
 
@@ -249,7 +492,7 @@
                         searchInput.value = '';
                         searchInput.focus();
                         clearSearch.classList.add('hidden');
-                        filterProjects('');
+                        filterBarangays('');
                         searchResults.classList.add('hidden');
                     });
                 }
@@ -269,7 +512,7 @@
                         // Debounce search for better performance
                         clearTimeout(searchDebounceTimer);
                         searchDebounceTimer = setTimeout(() => {
-                            filterProjects(searchTerm);
+                            filterBarangays(searchTerm);
                         }, 300);
                     });
 
@@ -278,34 +521,31 @@
                         if (e.key === 'Escape') {
                             searchInput.value = '';
                             clearSearch.classList.add('hidden');
-                            filterProjects('');
+                            filterBarangays('');
                             searchResults.classList.add('hidden');
                         }
                     });
                 }
 
-                // Filter projects based on search term
-                function filterProjects(searchTerm) {
-                    if (!projectCards.length) return;
+                // Filter barangays based on search term
+                function filterBarangays(searchTerm) {
+                    if (!barangayCards.length) return;
 
                     let visibleCount = 0;
                     let highlightedResults = [];
 
-                    projectCards.forEach(card => {
-                        const title = card.dataset.title || '';
-                        const chairman = card.dataset.chairman || '';
-                        const location = card.dataset.location || '';
-                        const date = card.dataset.date || '';
-                        const description = card.dataset.description || '';
+                    barangayCards.forEach(card => {
+                        const barangay = card.dataset.barangay || '';
+                        const chairman = card.querySelector('.project-chairman')?.textContent.toLowerCase() || '';
 
-                        const allText = `${title} ${chairman} ${location} ${date} ${description}`;
+                        const allText = `${barangay} ${chairman}`;
 
                         if (searchTerm === '' || allText.includes(searchTerm)) {
                             card.style.display = '';
                             visibleCount++;
 
                             // If this is a strong match, add to highlighted results
-                            if (searchTerm !== '' && (title.includes(searchTerm) || chairman.includes(searchTerm))) {
+                            if (searchTerm !== '' && (barangay.includes(searchTerm) || chairman.includes(searchTerm))) {
                                 highlightedResults.push(card);
                             }
                         } else {
@@ -318,7 +558,7 @@
                         searchResults.classList.remove('hidden');
 
                         if (visibleCount > 0) {
-                            resultsCount.textContent = `Found ${visibleCount} project${visibleCount !== 1 ? 's' : ''} matching "${searchTerm}"`;
+                            resultsCount.textContent = `Found ${visibleCount} barangay${visibleCount !== 1 ? 's' : ''} matching "${searchTerm}"`;
                             noResults.classList.add('hidden');
 
                             // Move highlighted results to the top if searching
@@ -335,11 +575,11 @@
                         searchResults.classList.add('hidden');
 
                         // Restore original order when search is cleared
-                        const originalOrder = Array.from(projectCards);
+                        const originalOrder = Array.from(barangayCards);
                         originalOrder.sort((a, b) => {
-                            const dateA = a.querySelector('.project-date')?.textContent || '';
-                            const dateB = b.querySelector('.project-date')?.textContent || '';
-                            return new Date(dateB) - new Date(dateA); // Most recent first
+                            const nameA = a.querySelector('.barangay-name')?.textContent || '';
+                            const nameB = b.querySelector('.barangay-name')?.textContent || '';
+                            return nameA.localeCompare(nameB); // Alphabetical order
                         });
 
                         originalOrder.forEach(card => {
@@ -347,8 +587,6 @@
                         });
                     }
                 }
-
-                // No need to close search when clicking outside since it's always visible
             });
 
             // Animate elements on scroll
@@ -383,6 +621,58 @@
                 stagger: 0.2,
                 ease: "power3.out"
             });
+
+            // Mission and Vision animations
+            const missionVisionSection = document.querySelector('.grid-cols-1.md\\:grid-cols-2');
+            if (missionVisionSection) {
+                const cards = missionVisionSection.querySelectorAll('.glass-effect');
+                gsap.from(cards[0], {
+                    duration: 1,
+                    x: -50,
+                    opacity: 0,
+                    delay: 0.3,
+                    ease: "back.out(1.7)"
+                });
+                gsap.from(cards[1], {
+                    duration: 1,
+                    x: 50,
+                    opacity: 0,
+                    delay: 0.3,
+                    ease: "back.out(1.7)"
+                });
+            }
+
+            // Data Privacy Act animations
+            // Add an ID to the privacy section for easier targeting
+            const privacySection = document.getElementById('privacySection');
+            if (privacySection) {
+                // Animate the header
+                gsap.from(privacySection.querySelector('.flex.items-center.justify-center'), {
+                    scrollTrigger: {
+                        trigger: privacySection,
+                        start: "top 80%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: -20,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: "power2.out"
+                });
+
+                // Animate the cards with stagger
+                gsap.from(privacySection.querySelectorAll('.bg-white\\/50'), {
+                    scrollTrigger: {
+                        trigger: privacySection,
+                        start: "top 70%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: 30,
+                    opacity: 0,
+                    duration: 0.8,
+                    stagger: 0.15,
+                    ease: "power3.out"
+                });
+            }
 
             // Initialize scroll animations
             if (typeof ScrollTrigger !== 'undefined') {

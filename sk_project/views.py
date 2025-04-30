@@ -43,7 +43,7 @@ def landing_page(request):
     # Get all completed projects first
     completed_projects = Project.objects.filter(
         status='completed'
-    ).select_related('chairman').order_by('-end_date')[:6]
+    ).select_related('chairman').order_by('-end_date')
 
     projects_data = []
     for project in completed_projects:
@@ -60,6 +60,7 @@ def landing_page(request):
             'title': project.name,
             'image': project_image,
             'chairman_name': chairman.get_full_name() or chairman.username,
+            'chairman_logo': chairman.logo,  # Add the chairman's logo (barangay logo)
             'address': address,
             'completion_date': project.end_date,
             'description': project.description
