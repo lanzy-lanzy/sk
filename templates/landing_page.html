@@ -192,7 +192,7 @@
                                 <h3 class="text-lg sm:text-xl font-semibold text-tertiary">
                                     <i class="fas fa-map-marked-alt mr-2"></i>Barangays of Dumingag
                                 </h3>
-                                <p class="text-xs sm:text-sm text-gray-600">Click on a barangay to view its projects</p>
+                                <p class="text-xs sm:text-sm text-gray-600">Click on a barangay logo to view its recent completed projects</p>
                             </div>
                             <!-- Scrollable container for barangay logos -->
                             <div class="barangay-logos-container flex items-center justify-center flex-wrap gap-4 py-2 px-2 sm:px-4">
@@ -760,6 +760,180 @@
                 modal.classList.remove('hidden');
             }
 
+            // Function to open modal with only recent completed projects
+            function openRecentProjectsModal(barangayName) {
+                // Set the modal title
+                document.getElementById('modalBarangayTitle').innerHTML = `<i class="fas fa-landmark mr-3"></i>Recent Projects - Barangay ${barangayName}`;
+
+                // Filter projects for this barangay
+                const barangayProjects = allProjects.filter(project => project.address === barangayName);
+
+                // Sort projects by date (most recent first) and take only the most recent ones (up to 5)
+                const recentProjects = [...barangayProjects]
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 5);
+
+                // Generate HTML for each project
+                let projectsHTML = '';
+
+                if (recentProjects.length > 0) {
+                    projectsHTML += `
+                        <div class="mb-6 pb-4 border-b border-gray-200">
+                            <h4 class="text-lg font-semibold text-tertiary flex items-center">
+                                <i class="fas fa-clock mr-2"></i>Recently Completed Projects
+                                <span class="ml-2 text-sm font-normal text-gray-500">(Showing ${recentProjects.length} of ${barangayProjects.length} total projects)</span>
+                            </h4>
+                        </div>
+                    `;
+
+                    recentProjects.forEach(project => {
+                        // Start with the project details
+                        let projectHTML = `
+                            <div class="project-item border-b border-gray-200 pb-6 mb-8">
+                                <div class="flex flex-col md:flex-row">
+                                    <div class="md:w-1/3 mb-4 md:mb-0 md:mr-6">
+                                        ${project.image ?
+                                            `<img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover rounded-lg">` :
+                                            `<div class="w-full h-48 flex items-center justify-center bg-quaternary/30 rounded-lg">
+                                                <i class="fas fa-project-diagram text-5xl text-tertiary opacity-50"></i>
+                                            </div>`
+                                        }
+                                    </div>
+                                    <div class="md:w-2/3">
+                                        <h4 class="text-xl font-bold text-tertiary mb-2">${project.title}</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-user-tie text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Chairman</p>
+                                                    <p class="text-sm font-medium">${project.chairman}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-calendar-check text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Completed</p>
+                                                    <p class="text-sm font-medium">${project.date}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-money-bill-wave text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Budget</p>
+                                                    <p class="text-sm font-medium">₱ ${parseFloat(project.budget).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">${project.description || 'No description available.'}</p>
+                                    </div>
+                                </div>
+                        `;
+
+                        // Add accomplishment reports section if available
+                        if (project.accomplishment_reports && project.accomplishment_reports.length > 0) {
+                            projectHTML += `
+                                <div class="mt-6">
+                                    <h5 class="text-lg font-semibold text-tertiary mb-3">
+                                        <i class="fas fa-clipboard-check mr-2"></i>Accomplishment Reports
+                                    </h5>
+                                    <div class="space-y-4">
+                            `;
+
+                            // Add each accomplishment report
+                            project.accomplishment_reports.forEach(report => {
+                                projectHTML += `
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h6 class="font-medium text-tertiary mb-2">
+                                            <i class="fas fa-calendar-alt mr-2"></i>${report.date}
+                                        </h6>
+                                        <p class="text-sm text-gray-600 mb-3">${report.details || 'No details available.'}</p>
+                                `;
+
+                                // Add images if available
+                                if (report.images && report.images.length > 0) {
+                                    projectHTML += `
+                                        <div class="mt-3">
+                                            <p class="text-xs text-gray-500 mb-2">Report Images:</p>
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    `;
+
+                                    report.images.forEach(img => {
+                                        if (img.url) {
+                                            projectHTML += `
+                                                <div class="relative group" onclick="openImagePreviewModal('${img.url}', '${img.caption || ''}')">
+                                                    <img src="${img.url}" alt="${img.caption || 'Project image'}"
+                                                         class="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity">
+                                                    ${img.caption ? `
+                                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-end justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+                                                        <p class="text-white text-xs p-1 truncate w-full text-center bg-black bg-opacity-70">${img.caption}</p>
+                                                    </div>` : ''}
+                                                    <div class="absolute top-1 right-1 bg-tertiary text-white rounded-full w-5 h-5 flex items-center justify-center opacity-70">
+                                                        <i class="fas fa-search-plus text-xs"></i>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }
+                                    });
+
+                                    projectHTML += `
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+
+                                projectHTML += `
+                                    </div>
+                                `;
+                            });
+
+                            projectHTML += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Close the project item div
+                        projectHTML += `
+                            </div>
+                        `;
+
+                        projectsHTML += projectHTML;
+                    });
+
+                    // Add a button to view all projects if there are more
+                    if (barangayProjects.length > recentProjects.length) {
+                        projectsHTML += `
+                            <div class="text-center mt-6 pt-4 border-t border-gray-200">
+                                <button onclick="openProjectsModal('${barangayName}')" class="inline-flex items-center px-6 py-3 rounded-full text-base font-medium bg-tertiary text-white hover:bg-quaternary transition-colors duration-300">
+                                    <i class="fas fa-list-ul mr-2"></i>View All ${barangayProjects.length} Projects
+                                </button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    projectsHTML = `
+                        <div class="text-center py-6 mb-8">
+                            <i class="fas fa-info-circle text-4xl text-tertiary/50 mb-4"></i>
+                            <p class="text-lg text-gray-600">No projects found for Barangay ${barangayName}.</p>
+                            <p class="text-sm text-gray-500 mt-2">Projects will appear here once completed by the barangay chairman.</p>
+                        </div>
+                    `;
+                }
+
+                // Update the modal content
+                document.getElementById('modalProjectsList').innerHTML = projectsHTML;
+
+                // Show the modal
+                const modal = document.getElementById('projectsModal');
+                modal.classList.remove('hidden');
+            }
+
             // Function to close the projects modal
             function closeProjectsModal() {
                 const modal = document.getElementById('projectsModal');
@@ -883,9 +1057,9 @@
                         logoItem.appendChild(logoContainer);
                         logoItem.appendChild(name);
 
-                        // Add click event for all barangays
+                        // Add click event for all barangays - show only recent projects when clicking on logo
                         logoItem.addEventListener('click', () => {
-                            openProjectsModal(barangay);
+                            openRecentProjectsModal(barangay);
                         });
 
                         // Add visual indicator based on whether there are projects
