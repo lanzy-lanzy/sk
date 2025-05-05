@@ -324,13 +324,13 @@
                                         <span class="hidden xs:inline">View</span> Details
                                     </a>
 
-                                    {% if project.status == 'completed' %}
+                                    <!-- {% if project.status == 'completed' %}
                                     <a href="{% url 'project_accomplishment_report' project.id %}"
                                        class="inline-flex items-center px-2 sm:px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300 text-xs sm:text-sm">
                                         <i class="fas fa-file-alt mr-1"></i>
                                         <span class="hidden xs:inline">View</span> Reports
                                     </a>
-                                    {% endif %}
+                                    {% endif %} -->
                                 </div>
                             </td>
                         </tr>
@@ -476,9 +476,9 @@
                             <a href="{% url 'project_detail' project.id %}" class="inline-flex items-center px-3 py-1 bg-tertiary text-white rounded hover:bg-quaternary transition duration-300 text-xs sm:text-sm justify-center xs:justify-start">
                                 <i class="fas fa-eye mr-1"></i>Details
                             </a>
-                            <a href="{% url 'project_accomplishment_report' project.id %}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300 text-xs sm:text-sm justify-center xs:justify-start">
+                            <!-- <a href="{% url 'project_accomplishment_report' project.id %}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300 text-xs sm:text-sm justify-center xs:justify-start">
                                 <i class="fas fa-file-alt mr-1"></i>Reports
-                            </a>
+                            </a> -->
                         </div>
                     </div>
                 </div>

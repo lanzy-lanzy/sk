@@ -351,7 +351,8 @@
                     address: "{{ project.address }}",
                     date: "{{ project.completion_date|date:'F d, Y' }}",
                     description: "{% if project.description %}{{ project.description|escapejs }}{% endif %}",
-                    image: "{% if project.image %}{{ project.image.url }}{% endif %}"
+                    image: "{% if project.image %}{{ project.image.url }}{% endif %}",
+                    budget: "{{ project.budget }}"
                 }{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ];
@@ -382,7 +383,7 @@
                                     </div>
                                     <div class="md:w-2/3">
                                         <h4 class="text-xl font-bold text-tertiary mb-2">${project.title}</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                             <div class="flex items-center">
                                                 <div class="bg-tertiary/10 rounded-full p-2 mr-3">
                                                     <i class="fas fa-user-tie text-tertiary"></i>
@@ -399,6 +400,15 @@
                                                 <div>
                                                     <p class="text-xs text-gray-500">Completed</p>
                                                     <p class="text-sm font-medium">${project.date}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <div class="bg-tertiary/10 rounded-full p-2 mr-3">
+                                                    <i class="fas fa-money-bill-wave text-tertiary"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Budget</p>
+                                                    <p class="text-sm font-medium">₱ ${parseFloat(project.budget).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                                                 </div>
                                             </div>
                                         </div>

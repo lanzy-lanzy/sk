@@ -63,7 +63,8 @@ def landing_page(request):
             'chairman_logo': chairman.logo,  # Add the chairman's logo (barangay logo)
             'address': address,
             'completion_date': project.end_date,
-            'description': project.description
+            'description': project.description,
+            'budget': project.allocated_budget  # Add the budget information
         }
         projects_data.append(project_info)
 
