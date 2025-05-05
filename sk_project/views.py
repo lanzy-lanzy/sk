@@ -40,10 +40,13 @@ from django.urls import reverse
 
 # User Authentication Views
 def landing_page(request):
-    # Get all completed projects first
+    # Get all completed projects first with their accomplishment reports
     completed_projects = Project.objects.filter(
         status='completed'
-    ).select_related('chairman').order_by('-end_date')
+    ).select_related('chairman').prefetch_related(
+        'accomplishment_reports',
+        'accomplishment_reports__report_images'
+    ).order_by('-end_date')
 
     projects_data = []
     for project in completed_projects:
@@ -56,6 +59,22 @@ def landing_page(request):
         if not project_image:
             project_image = project.latest_image
 
+        # Get accomplishment reports for this project
+        accomplishment_reports = []
+        for report in project.accomplishment_reports.all().order_by('-report_date'):
+            report_images = []
+            for img in report.report_images.all():
+                report_images.append({
+                    'url': img.image.url if img.image else None,
+                    'caption': img.caption
+                })
+
+            accomplishment_reports.append({
+                'date': report.report_date,
+                'details': report.report_details,
+                'images': report_images
+            })
+
         project_info = {
             'title': project.name,
             'image': project_image,
@@ -64,7 +83,8 @@ def landing_page(request):
             'address': address,
             'completion_date': project.end_date,
             'description': project.description,
-            'budget': project.allocated_budget  # Add the budget information
+            'budget': project.allocated_budget,  # Add the budget information
+            'accomplishment_reports': accomplishment_reports  # Add accomplishment reports
         }
         projects_data.append(project_info)
 

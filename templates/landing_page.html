@@ -31,6 +31,130 @@
             .hero-pattern {
                 background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230a6847' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             }
+
+            /* Barangay Logo Banner Styles */
+            .barangay-logo-banner {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(5px);
+                border-radius: 1rem;
+                padding: 1rem;
+                box-shadow: 0 4px 20px rgba(10, 104, 71, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                overflow: hidden;
+            }
+
+            .barangay-logo-item {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background-color: rgba(10, 104, 71, 0.1);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+                border: 2px solid rgba(10, 104, 71, 0.2);
+            }
+
+            .barangay-logo-item:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(10, 104, 71, 0.2);
+                background-color: rgba(10, 104, 71, 0.2);
+                border-color: rgba(10, 104, 71, 0.4);
+            }
+
+            .barangay-logo-image {
+                width: 60px;
+                height: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 0.25rem;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.8);
+                overflow: hidden;
+            }
+
+            .barangay-logo-icon {
+                font-size: 2rem;
+                color: #0A6847;
+            }
+
+            .barangay-logo-name {
+                font-size: 0.7rem;
+                font-weight: bold;
+                color: #0A6847;
+                text-align: center;
+                padding: 0 0.5rem;
+                line-height: 1;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            @media (max-width: 640px) {
+                .barangay-logo-item {
+                    width: 70px;
+                    height: 70px;
+                }
+
+                .barangay-logo-image {
+                    width: 45px;
+                    height: 45px;
+                }
+
+                .barangay-logo-icon {
+                    font-size: 1.5rem;
+                }
+
+                .barangay-logo-name {
+                    font-size: 0.55rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .barangay-logo-item {
+                    width: 60px;
+                    height: 60px;
+                }
+
+                .barangay-logo-image {
+                    width: 38px;
+                    height: 38px;
+                    margin-bottom: 0.1rem;
+                }
+
+                .barangay-logo-icon {
+                    font-size: 1.2rem;
+                }
+
+                .barangay-logo-name {
+                    font-size: 0.5rem;
+                }
+
+                .barangay-logos-container {
+                    gap: 0.5rem;
+                }
+            }
+
+            /* Utility classes */
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
         </style>
     </head>
     <body class="bg-gradient-to-br from-secondary to-primary min-h-screen hero-pattern">
@@ -59,9 +183,28 @@
         <main class="pt-20">
             <!-- Hero Section -->
             <section id="getStartedSection" class="container mx-auto px-4 py-8 sm:py-16">
-                <div class="text-center max-w-4xl mx-auto">
-                    <div class="flex justify-center mb-6">
-                        <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-24 sm:h-32 md:h-40">
+                <div class="text-center max-w-5xl mx-auto">
+                    <!-- Barangay Logo Banner -->
+                    <div class="mb-8 overflow-hidden">
+                        <div class="barangay-logo-banner relative">
+                            <!-- Title for the banner -->
+                            <div class="text-center mb-3">
+                                <h3 class="text-lg sm:text-xl font-semibold text-tertiary">
+                                    <i class="fas fa-map-marked-alt mr-2"></i>Barangays of Dumingag
+                                </h3>
+                                <p class="text-xs sm:text-sm text-gray-600">Click on a barangay to view its projects</p>
+                            </div>
+                            <!-- Scrollable container for barangay logos -->
+                            <div class="barangay-logos-container flex items-center justify-center flex-wrap gap-4 py-2 px-2 sm:px-4">
+                                <!-- Barangay logos will be dynamically generated -->
+                            </div>
+                            <!-- View all barangays button -->
+                            <div class="text-center mt-4">
+                                <button id="viewAllBarangays" class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-tertiary text-white hover:bg-quaternary transition-colors duration-300">
+                                    <i class="fas fa-th-large mr-2"></i>View All Barangays
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-tertiary mb-4 sm:mb-6 leading-tight">
                         <span class="block">Empowering Youth Leadership</span>
@@ -226,7 +369,7 @@
                 <!-- Projects Modal -->
                 <div id="projectsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-y-auto">
                     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full">
                             <div class="bg-tertiary text-white px-4 py-5 sm:px-6 flex justify-between items-center">
                                 <h3 class="text-2xl font-bold" id="modalBarangayTitle">
                                     <i class="fas fa-landmark mr-3"></i>Barangay Projects
@@ -235,13 +378,36 @@
                                     <i class="fas fa-times text-xl"></i>
                                 </button>
                             </div>
-                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[75vh] overflow-y-auto">
                                 <div id="modalProjectsList" class="space-y-6">
                                     <!-- Projects will be loaded here dynamically -->
                                 </div>
                             </div>
                             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                                 <button type="button" onclick="closeProjectsModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-tertiary text-base font-medium text-white hover:bg-quaternary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tertiary sm:ml-3 sm:w-auto sm:text-sm">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Preview Modal -->
+                <div id="imagePreviewModal" class="fixed inset-0 z-[60] overflow-auto bg-black bg-opacity-75 hidden flex items-center justify-center">
+                    <div class="relative p-4 w-full max-w-4xl mx-auto">
+                        <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                            <div class="bg-tertiary text-white px-6 py-4 flex justify-between items-center">
+                                <h3 id="imagePreviewTitle" class="text-lg font-bold">Image Preview</h3>
+                                <button onclick="closeImagePreviewModal()" class="text-white hover:text-gray-200 focus:outline-none">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="p-6 flex items-center justify-center">
+                                <img id="previewImage" src="" alt="Preview" class="max-w-full max-h-[70vh]">
+                            </div>
+                            <div class="bg-gray-100 px-6 py-3 flex justify-between items-center">
+                                <p id="imageCaption" class="text-sm text-gray-700"></p>
+                                <button onclick="closeImagePreviewModal()" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
                                     Close
                                 </button>
                             </div>
@@ -352,9 +518,39 @@
                     date: "{{ project.completion_date|date:'F d, Y' }}",
                     description: "{% if project.description %}{{ project.description|escapejs }}{% endif %}",
                     image: "{% if project.image %}{{ project.image.url }}{% endif %}",
-                    budget: "{{ project.budget }}"
+                    budget: "{{ project.budget }}",
+                    chairman_logo: "{% if project.chairman_logo %}{{ project.chairman_logo.url }}{% endif %}",
+                    accomplishment_reports: [
+                        {% for report in project.accomplishment_reports %}
+                        {
+                            date: "{{ report.date|date:'F d, Y' }}",
+                            details: "{{ report.details|escapejs }}",
+                            images: [
+                                {% for img in report.images %}
+                                {
+                                    url: "{{ img.url }}",
+                                    caption: "{{ img.caption|escapejs }}"
+                                }{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            ]
+                        }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
                 }{% if not forloop.last %},{% endif %}
                 {% endfor %}
+            ];
+
+            // List of barangays in Dumingag, Zamboanga del Sur
+            const barangayList = [
+                "Bagong Kauswagan", "Bagong Silang", "Bagumbayan", "Balonai",
+                "Bitoon", "Blanquita", "Bonifacio", "Bucayan", "Calumanggi",
+                "Canibongan", "Caridad", "Datu Totoca", "Ditulan", "Dulop",
+                "Guitran", "Guling", "Gumpingan", "Labangon", "Licabang",
+                "Lipawan", "Lower Landing", "Lower Timonan", "Macasing",
+                "Mahayahay", "Manuel Iyao", "New Basak", "Ocapan", "Poblacion",
+                "Saad", "San Pablo", "San Pedro", "Sarakan", "Sebucao",
+                "Senote", "Sinonok", "Sunop", "Tagun", "Tamurayan",
+                "Tigbao", "Upper Landing", "Upper Timonan"
             ];
 
             // Function to open the projects modal
@@ -370,8 +566,9 @@
 
                 if (barangayProjects.length > 0) {
                     barangayProjects.forEach(project => {
-                        projectsHTML += `
-                            <div class="project-item border-b border-gray-200 pb-6">
+                        // Start with the project details
+                        let projectHTML = `
+                            <div class="project-item border-b border-gray-200 pb-6 mb-8">
                                 <div class="flex flex-col md:flex-row">
                                     <div class="md:w-1/3 mb-4 md:mb-0 md:mr-6">
                                         ${project.image ?
@@ -415,16 +612,144 @@
                                         <p class="text-gray-600 text-sm">${project.description || 'No description available.'}</p>
                                     </div>
                                 </div>
+                        `;
+
+                        // Add accomplishment reports section if available
+                        if (project.accomplishment_reports && project.accomplishment_reports.length > 0) {
+                            projectHTML += `
+                                <div class="mt-6">
+                                    <h5 class="text-lg font-semibold text-tertiary mb-3">
+                                        <i class="fas fa-clipboard-check mr-2"></i>Accomplishment Reports
+                                    </h5>
+                                    <div class="space-y-4">
+                            `;
+
+                            // Add each accomplishment report
+                            project.accomplishment_reports.forEach(report => {
+                                projectHTML += `
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h6 class="font-medium text-tertiary mb-2">
+                                            <i class="fas fa-calendar-alt mr-2"></i>${report.date}
+                                        </h6>
+                                        <p class="text-sm text-gray-600 mb-3">${report.details || 'No details available.'}</p>
+                                `;
+
+                                // Add images if available
+                                if (report.images && report.images.length > 0) {
+                                    projectHTML += `
+                                        <div class="mt-3">
+                                            <p class="text-xs text-gray-500 mb-2">Report Images:</p>
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    `;
+
+                                    report.images.forEach(img => {
+                                        if (img.url) {
+                                            projectHTML += `
+                                                <div class="relative group" onclick="openImagePreviewModal('${img.url}', '${img.caption || ''}')">
+                                                    <img src="${img.url}" alt="${img.caption || 'Project image'}"
+                                                         class="h-24 w-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity">
+                                                    ${img.caption ? `
+                                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-end justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+                                                        <p class="text-white text-xs p-1 truncate w-full text-center bg-black bg-opacity-70">${img.caption}</p>
+                                                    </div>` : ''}
+                                                    <div class="absolute top-1 right-1 bg-tertiary text-white rounded-full w-5 h-5 flex items-center justify-center opacity-70">
+                                                        <i class="fas fa-search-plus text-xs"></i>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }
+                                    });
+
+                                    projectHTML += `
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+
+                                projectHTML += `
+                                    </div>
+                                `;
+                            });
+
+                            projectHTML += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // Close the project item div
+                        projectHTML += `
                             </div>
                         `;
+
+                        projectsHTML += projectHTML;
                     });
                 } else {
+                    // Get recent projects from OTHER barangays as reference (up to 3)
+                    const recentProjects = [...allProjects]
+                        .filter(project => project.address !== barangayName) // Exclude current barangay
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .slice(0, 3);
+
                     projectsHTML = `
-                        <div class="text-center py-8">
+                        <div class="text-center py-6 mb-8">
                             <i class="fas fa-info-circle text-4xl text-tertiary/50 mb-4"></i>
-                            <p class="text-lg text-gray-600">No projects found for this barangay.</p>
+                            <p class="text-lg text-gray-600">No projects found for Barangay ${barangayName}.</p>
+                            <p class="text-sm text-gray-500 mt-2">Projects will appear here once completed by the barangay chairman.</p>
                         </div>
                     `;
+
+                    // Only show recent projects if there are any from other barangays
+                    if (recentProjects.length > 0 && allProjects.some(project => project.address !== barangayName)) {
+                        projectsHTML += `
+                            <div class="border-t border-gray-200 pt-8">
+                                <h4 class="text-xl font-semibold text-tertiary mb-6 flex items-center">
+                                    <i class="fas fa-clock mr-3"></i>Recent Projects From Different Barangays
+                                </h4>
+                                <div class="space-y-8">
+                        `;
+
+                        // Add recent projects
+                        recentProjects.forEach(project => {
+                            projectsHTML += `
+                                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-300 cursor-pointer"
+                                     onclick="openProjectsModal('${project.address}')">
+                                    <div class="flex flex-col md:flex-row">
+                                        <div class="md:w-1/4 mb-4 md:mb-0 md:mr-4">
+                                            ${project.image ?
+                                                `<img src="${project.image}" alt="${project.title}" class="w-full h-32 object-cover rounded-lg">` :
+                                                `<div class="w-full h-32 flex items-center justify-center bg-quaternary/30 rounded-lg">
+                                                    <i class="fas fa-project-diagram text-3xl text-tertiary opacity-50"></i>
+                                                </div>`
+                                            }
+                                        </div>
+                                        <div class="md:w-3/4">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <h5 class="text-lg font-medium text-tertiary">${project.title}</h5>
+                                                <span class="bg-tertiary/10 text-tertiary text-xs px-2 py-1 rounded-full">
+                                                    ${project.address}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center text-sm text-gray-500 mb-2">
+                                                <i class="fas fa-calendar-check mr-2"></i>${project.date}
+                                            </div>
+                                            <p class="text-sm text-gray-600 line-clamp-2">${project.description || 'No description available.'}</p>
+                                            <div class="mt-3 text-right">
+                                                <span class="text-xs text-tertiary inline-flex items-center">
+                                                    <i class="fas fa-arrow-right mr-1"></i>View All Projects from ${project.address}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        projectsHTML += `
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
 
                 // Update the modal content
@@ -441,11 +766,36 @@
                 modal.classList.add('hidden');
             }
 
-            // Close modal when clicking outside
+            // Function to open image preview modal
+            function openImagePreviewModal(imageUrl, caption) {
+                const modal = document.getElementById('imagePreviewModal');
+                const previewImage = document.getElementById('previewImage');
+                const imageCaption = document.getElementById('imageCaption');
+
+                previewImage.src = imageUrl;
+                imageCaption.textContent = caption || '';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            // Function to close image preview modal
+            function closeImagePreviewModal() {
+                const modal = document.getElementById('imagePreviewModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            // Close modals when clicking outside
             document.addEventListener('click', function(event) {
-                const modal = document.getElementById('projectsModal');
-                if (event.target === modal) {
+                const projectsModal = document.getElementById('projectsModal');
+                if (event.target === projectsModal) {
                     closeProjectsModal();
+                }
+
+                const imagePreviewModal = document.getElementById('imagePreviewModal');
+                if (event.target === imagePreviewModal) {
+                    closeImagePreviewModal();
                 }
             });
 
@@ -459,6 +809,135 @@
                 const noResults = document.getElementById('noResults');
                 const barangayCards = document.querySelectorAll('.barangay-card');
                 const projectsContainer = document.getElementById('projectsContainer');
+
+                // Generate barangay logo banner
+                const barangayLogosContainer = document.querySelector('.barangay-logos-container');
+
+                // Function to generate a random icon for each barangay
+                function getRandomIcon() {
+                    const icons = [
+                        'fa-landmark', 'fa-mountain', 'fa-tree', 'fa-water',
+                        'fa-sun', 'fa-seedling', 'fa-leaf', 'fa-home',
+                        'fa-church', 'fa-school', 'fa-store', 'fa-building',
+                        'fa-flag', 'fa-star', 'fa-compass', 'fa-map-marker-alt'
+                    ];
+                    return icons[Math.floor(Math.random() * icons.length)];
+                }
+
+                // Generate barangay logos
+                if (barangayLogosContainer) {
+                    // Shuffle the barangay list to display a random selection
+                    const shuffledBarangays = [...barangayList].sort(() => 0.5 - Math.random());
+                    // Take only the first 12 for display (or fewer if the list is shorter)
+                    const displayBarangays = shuffledBarangays.slice(0, 12);
+
+                    // Function to create a barangay logo item
+                    function createBarangayLogoItem(barangay) {
+                        const logoItem = document.createElement('div');
+                        logoItem.className = 'barangay-logo-item';
+                        logoItem.setAttribute('data-barangay', barangay);
+
+                        // Check if we have projects for this barangay
+                        const barangayProjects = allProjects.filter(project =>
+                            project.address.toLowerCase().includes(barangay.toLowerCase())
+                        );
+
+                        const hasProjects = barangayProjects.length > 0;
+
+                        // Find the barangay logo if available
+                        let logoUrl = null;
+                        if (hasProjects) {
+                            // Try to find a project with a chairman logo
+                            for (const project of barangayProjects) {
+                                if (project.chairman_logo && project.chairman_logo.trim() !== '') {
+                                    logoUrl = project.chairman_logo;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Create logo container
+                        const logoContainer = document.createElement('div');
+                        logoContainer.className = 'barangay-logo-image';
+
+                        // If we have a logo, use it; otherwise use an icon
+                        if (logoUrl) {
+                            const img = document.createElement('img');
+                            img.src = logoUrl;
+                            img.alt = barangay;
+                            img.className = 'w-full h-full object-contain';
+                            logoContainer.appendChild(img);
+                        } else {
+                            // Create a fallback icon
+                            const icon = document.createElement('i');
+                            icon.className = `fas ${getRandomIcon()} barangay-logo-icon`;
+                            logoContainer.appendChild(icon);
+                        }
+
+                        // Create the name element
+                        const name = document.createElement('div');
+                        name.className = 'barangay-logo-name';
+                        name.textContent = barangay;
+
+                        // Add elements to the logo item
+                        logoItem.appendChild(logoContainer);
+                        logoItem.appendChild(name);
+
+                        // Add click event for all barangays
+                        logoItem.addEventListener('click', () => {
+                            openProjectsModal(barangay);
+                        });
+
+                        // Add visual indicator based on whether there are projects
+                        if (hasProjects) {
+                            // Add a small indicator that it has projects
+                            const indicator = document.createElement('div');
+                            indicator.className = 'absolute bottom-1 right-1 w-3 h-3 bg-quaternary rounded-full';
+                            logoItem.appendChild(indicator);
+                        } else {
+                            // Still make it clickable but with a different indicator
+                            logoItem.style.opacity = '0.9';
+                            const indicator = document.createElement('div');
+                            indicator.className = 'absolute bottom-1 right-1 w-3 h-3 bg-gray-300 rounded-full';
+                            logoItem.appendChild(indicator);
+                        }
+
+                        return logoItem;
+                    }
+
+                    // Create logo items for initial display
+                    displayBarangays.forEach(barangay => {
+                        barangayLogosContainer.appendChild(createBarangayLogoItem(barangay));
+                    });
+
+                    // Handle "View All Barangays" button click
+                    const viewAllButton = document.getElementById('viewAllBarangays');
+                    if (viewAllButton) {
+                        viewAllButton.addEventListener('click', function() {
+                            // Clear current logos
+                            barangayLogosContainer.innerHTML = '';
+
+                            // Add all barangays
+                            barangayList.forEach(barangay => {
+                                barangayLogosContainer.appendChild(createBarangayLogoItem(barangay));
+                            });
+
+                            // Change button text and disable it
+                            this.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Showing All Barangays';
+                            this.disabled = true;
+                            this.classList.add('opacity-70', 'cursor-not-allowed');
+
+                            // Animate the new logos
+                            gsap.from(".barangay-logo-item", {
+                                duration: 0.5,
+                                scale: 0.5,
+                                opacity: 0,
+                                stagger: 0.02,
+                                ease: "back.out(1.7)"
+                            });
+                        });
+                    }
+                }
 
                 // Variables to track state
                 let searchDebounceTimer;
@@ -630,6 +1109,16 @@
                 opacity: 0,
                 stagger: 0.2,
                 ease: "power3.out"
+            });
+
+            // Animate barangay logo items
+            gsap.from(".barangay-logo-item", {
+                duration: 0.8,
+                scale: 0.5,
+                opacity: 0,
+                stagger: 0.05,
+                ease: "back.out(1.7)",
+                delay: 0.3
             });
 
             // Mission and Vision animations
