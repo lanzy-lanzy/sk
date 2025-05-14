@@ -138,11 +138,12 @@ from datetime import datetime
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'budget', 'resolution_document', 'start_date', 'end_date']
+        fields = ['name', 'description', 'beneficiary', 'budget', 'resolution_document', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200'}),
             'resolution_document': forms.FileInput(attrs={'class': 'sr-only', 'accept': '.pdf,.doc,.docx'}),
+            'beneficiary': forms.TextInput(attrs={'class': 'w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200', 'placeholder': 'Enter target beneficiaries'}),
         }
 
     def clean_start_date(self):

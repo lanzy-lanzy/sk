@@ -58,6 +58,7 @@ class User(AbstractUser):
 class MainBudget(models.Model):
     year = models.PositiveIntegerField()
     total_budget = models.DecimalField(max_digits=10, decimal_places=2)
+    beneficiary = models.CharField(max_length=255, blank=True, null=True, help_text='Target beneficiaries of this budget')
     chairman = models.ForeignKey(User, related_name='main_budgets', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -95,6 +96,7 @@ class Project(models.Model):
     """
     name = models.CharField(max_length=255)
     description = models.TextField()
+    beneficiary = models.CharField(max_length=255, blank=True, null=True, help_text='Target beneficiaries of this project')
     allocated_budget = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     main_budget = models.ForeignKey(MainBudget, related_name='projects', on_delete=models.SET_NULL, null=True)

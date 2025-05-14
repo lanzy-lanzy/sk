@@ -27,6 +27,13 @@
                     </div>
                 </div>
 
+                <!-- Beneficiary Field (Full Width) -->
+                <div class="mb-4">
+                    <label for="beneficiary" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-users mr-2"></i>Beneficiary</label>
+                    <input type="text" id="beneficiary" name="beneficiary" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter target beneficiaries" oninput="this.value=this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
+                    <p class="text-sm text-gray-500 mt-1">Specify who will benefit from this budget (e.g., Youth, Senior Citizens, etc.)</p>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="flex justify-end mt-4">
                     <button type="button" onclick="closeModal()" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"><i class="fas fa-times mr-2"></i>Cancel</button>
@@ -56,6 +63,12 @@
                     <label for="description" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
                     <textarea id="description" name="description" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" rows="3" placeholder="Enter project description" oninput="this.value=this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });" required></textarea>
                     <div id="description-error" class="text-red-500 text-xs mt-1 hidden">Please enter a project description.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="beneficiary" class="block text-gray-700 text-sm font-bold mb-2"><i class="fas fa-users mr-2"></i>Beneficiary</label>
+                    <input type="text" id="beneficiary" name="beneficiary" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-tertiary transition-colors duration-200" placeholder="Enter target beneficiaries" oninput="this.value=this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });">
+                    <p class="text-sm text-gray-500 mt-1">Specify who will benefit from this project (e.g., Youth, Senior Citizens, etc.)</p>
                 </div>
 
                 <!-- Two Column Layout -->
@@ -217,6 +230,7 @@
     function validateProjectForm() {
         const nameInput = document.getElementById('name');
         const descriptionInput = document.getElementById('description');
+        const beneficiaryInput = document.getElementById('beneficiary');
         const budgetInput = document.getElementById('budget');
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');

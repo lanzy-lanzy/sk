@@ -846,6 +846,11 @@ def generate_pdf_report(response, user, projects):
     for project in projects:
         elements.append(Paragraph(f"Project: {project.name}", subheading_style))
 
+        # Project beneficiary
+        if project.beneficiary:
+            elements.append(Paragraph(f"<b>Beneficiary:</b> {project.beneficiary}", normal_style))
+            elements.append(Spacer(1, 0.1*inch))
+
         # Project summary
         project_data = [
             ["Budget", "Expenses", "Remaining"],
@@ -1070,6 +1075,7 @@ def export_project_pdf(request, project_id):
         ["Start Date", project.start_date.strftime('%B %d, %Y')],
         ["End Date", project.end_date.strftime('%B %d, %Y')],
         ["Status", project.get_status_display()],
+        ["Beneficiary", project.beneficiary or "Not specified"],
         ["Description", project.description]
     ]
 
@@ -1471,7 +1477,7 @@ def generate_comprehensive_report(request):
             continue
 
         # Project summary table
-        project_data = [['Project Name', 'Budget', 'Total Expenses', 'Status']]
+        project_data = [['Project Name', 'Beneficiary', 'Budget', 'Total Expenses', 'Status']]
         for project in projects:
             total_expenses = project.total_expenses()
             status = "Active"
@@ -1482,12 +1488,13 @@ def generate_comprehensive_report(request):
 
             project_data.append([
                 project.name,
+                project.beneficiary or "Not specified",
                 f"PHP {project.allocated_budget:,.2f}",
                 f"PHP {total_expenses:,.2f}",
                 status
             ])
 
-        project_table = Table(project_data, colWidths=[250, 100, 100, 80])
+        project_table = Table(project_data, colWidths=[200, 150, 100, 100, 80])
         project_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
