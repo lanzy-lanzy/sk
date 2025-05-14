@@ -69,9 +69,10 @@ def landing_page(request):
                     'caption': img.caption
                 })
 
+            # Use field names that match what's expected in the template
             accomplishment_reports.append({
-                'date': report.report_date,
-                'details': report.report_details,
+                'date': report.report_date,  # Template expects 'date'
+                'details': report.report_details,  # Template expects 'details'
                 'images': report_images
             })
 

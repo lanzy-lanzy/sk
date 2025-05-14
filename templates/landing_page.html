@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
     {% load static %}
+<!-- This is a Django template that will be processed server-side before being sent to the browser -->
+<!-- The JavaScript errors shown in the IDE are expected and won't affect functionality -->
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +49,7 @@
                 width: 100px;
                 height: 100px;
                 border-radius: 50%;
-                background-color: rgba(10, 104, 71, 0.1);
+                background-color: rgba(255, 255, 255, 0.9);
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -57,13 +59,14 @@
                 position: relative;
                 overflow: hidden;
                 border: 2px solid rgba(10, 104, 71, 0.2);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             }
 
             .barangay-logo-item:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(10, 104, 71, 0.2);
-                background-color: rgba(10, 104, 71, 0.2);
-                border-color: rgba(10, 104, 71, 0.4);
+                box-shadow: 0 10px 20px rgba(10, 104, 71, 0.3);
+                background-color: rgba(255, 255, 255, 1);
+                border-color: rgba(10, 104, 71, 0.5);
             }
 
             .barangay-logo-image {
@@ -74,8 +77,17 @@
                 justify-content: center;
                 margin-bottom: 0.25rem;
                 border-radius: 50%;
-                background-color: rgba(255, 255, 255, 0.8);
+                background-color: rgba(255, 255, 255, 0.95);
                 overflow: hidden;
+                border: 1px solid rgba(10, 104, 71, 0.1);
+                transition: all 0.3s ease;
+            }
+
+            /* Add a pulse animation for the badge */
+            @keyframes pulse {
+                0% { transform: scale(1); opacity: 0.8; }
+                50% { transform: scale(1.1); opacity: 1; }
+                100% { transform: scale(1); opacity: 0.8; }
             }
 
             .barangay-logo-icon {
@@ -96,15 +108,16 @@
                 white-space: nowrap;
             }
 
+            /* Improve mobile responsiveness */
             @media (max-width: 640px) {
                 .barangay-logo-item {
-                    width: 70px;
-                    height: 70px;
+                    width: 80px;
+                    height: 80px;
                 }
 
                 .barangay-logo-image {
-                    width: 45px;
-                    height: 45px;
+                    width: 50px;
+                    height: 50px;
                 }
 
                 .barangay-logo-icon {
@@ -112,33 +125,52 @@
                 }
 
                 .barangay-logo-name {
-                    font-size: 0.55rem;
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                }
+
+                /* Make the tooltip more visible on mobile */
+                .barangay-logo-item .tooltip {
+                    padding: 4px 8px;
+                    font-size: 0.7rem;
                 }
             }
 
             @media (max-width: 480px) {
                 .barangay-logo-item {
-                    width: 60px;
-                    height: 60px;
+                    width: 70px;
+                    height: 70px;
                 }
 
                 .barangay-logo-image {
-                    width: 38px;
-                    height: 38px;
+                    width: 42px;
+                    height: 42px;
                     margin-bottom: 0.1rem;
                 }
 
                 .barangay-logo-icon {
-                    font-size: 1.2rem;
+                    font-size: 1.3rem;
                 }
 
                 .barangay-logo-name {
-                    font-size: 0.5rem;
+                    font-size: 0.55rem;
                 }
 
                 .barangay-logos-container {
                     gap: 0.5rem;
+                    justify-content: center;
                 }
+
+                /* Adjust badge position for smaller screens */
+                .barangay-logo-item .badge {
+                    top: -2px;
+                    right: -2px;
+                }
+            }
+
+            /* Add a subtle animation for logos with projects */
+            .barangay-logo-item.has-projects:hover .barangay-logo-image {
+                transform: scale(1.1);
             }
 
             /* Utility classes */
@@ -162,10 +194,13 @@
         <header class="fixed w-full top-0 z-50">
             <nav class="glass-effect text-tertiary py-4">
                 <div class="container mx-auto px-4 flex justify-between items-center">
-                    <h1 class="text-xl sm:text-2xl font-bold flex items-center">
-                        <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-8 sm:h-10 mr-3">
-                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-tertiary to-quaternary">SK Budget</span>
-                    </h1>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl sm:text-2xl font-bold flex items-center">
+                            <img src="{% static 'img/dumingag-logo.png' %}" alt="Dumingag Logo" class="h-8 sm:h-10 mr-3">
+                            <span class="bg-clip-text text-transparent bg-gradient-to-r from-tertiary to-quaternary"> Sangguniang Kabataan Management System</span>
+                        </h1>
+                        <p class="text-xs sm:text-sm italic text-gray-500 mt-1 ml-11">Project Budget and Accomplishment Reporting</p>
+                    </div>
                     <div class="flex items-center space-x-2 sm:space-x-4">
                         <a href="{% url 'register' %}" class="bg-tertiary hover:bg-quaternary text-white font-bold py-2 px-3 sm:px-6 rounded-full transition duration-300 transform hover:scale-105 text-xs sm:text-base">
                             <i class="fas fa-user-plus mr-1 sm:mr-2"></i><span class="hidden xs:inline">Register</span>
@@ -320,10 +355,11 @@
                         <div class="h-56 bg-tertiary relative overflow-hidden">
                             {% with first_project=barangay.list|first %}
                             {% if first_project.chairman_logo %}
-                                <img src="{{ first_project.chairman_logo.url }}" alt="{{ barangay.grouper }}" class="w-full h-full object-contain p-4">
+                                <img src="{{ first_project.chairman_logo.url }}" alt="{{ barangay.grouper }}" class="w-full h-full object-contain p-4"
+                                     onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-quaternary/80\'><i class=\'fas fa-map-marker-alt text-7xl text-white opacity-50\'></i></div>';">
                             {% else %}
                                 <div class="w-full h-full flex items-center justify-center bg-quaternary/80">
-                                    <i class="fas fa-landmark text-7xl text-white opacity-50"></i>
+                                    <i class="fas fa-map-marker-alt text-7xl text-white opacity-50"></i>
                                 </div>
                             {% endif %}
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
@@ -519,7 +555,7 @@
                     description: "{% if project.description %}{{ project.description|escapejs }}{% endif %}",
                     image: "{% if project.image %}{{ project.image.url }}{% endif %}",
                     budget: "{{ project.budget }}",
-                    chairman_logo: "{% if project.chairman_logo %}{{ project.chairman_logo.url }}{% endif %}",
+                    chairman_logo: "{% if project.chairman_logo %}{{ project.chairman_logo.url }}{% else %}{% static 'img/default_logo.png' %}{% endif %}",
                     accomplishment_reports: [
                         {% for report in project.accomplishment_reports %}
                         {
@@ -553,6 +589,16 @@
                 "Tigbao", "Upper Landing", "Upper Timonan"
             ];
 
+            // Get unique barangay names from projects to ensure we have all variations
+            const projectBarangays = [...new Set(allProjects.map(project => project.address))];
+
+            // Add any missing barangays from projects to our list
+            projectBarangays.forEach(barangay => {
+                if (!barangayList.includes(barangay)) {
+                    barangayList.push(barangay);
+                }
+            });
+
             // Function to open the projects modal
             function openProjectsModal(barangayName) {
                 // Set the modal title
@@ -574,7 +620,7 @@
                                         ${project.image ?
                                             `<img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover rounded-lg">` :
                                             `<div class="w-full h-48 flex items-center justify-center bg-quaternary/30 rounded-lg">
-                                                <i class="fas fa-project-diagram text-5xl text-tertiary opacity-50"></i>
+                                                <i class="fas fa-map-marker-alt text-5xl text-tertiary opacity-50"></i>
                                             </div>`
                                         }
                                     </div>
@@ -685,71 +731,23 @@
                         projectsHTML += projectHTML;
                     });
                 } else {
-                    // Get recent projects from OTHER barangays as reference (up to 3)
-                    const recentProjects = [...allProjects]
-                        .filter(project => project.address !== barangayName) // Exclude current barangay
-                        .sort((a, b) => new Date(b.date) - new Date(a.date))
-                        .slice(0, 3);
 
                     projectsHTML = `
                         <div class="text-center py-6 mb-8">
                             <i class="fas fa-info-circle text-4xl text-tertiary/50 mb-4"></i>
                             <p class="text-lg text-gray-600">No projects found for Barangay ${barangayName}.</p>
                             <p class="text-sm text-gray-500 mt-2">Projects will appear here once completed by the barangay chairman.</p>
+                            <div class="mt-6">
+                                <button onclick="document.getElementById('viewAllBarangays').click(); closeProjectsModal();"
+                                        class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-tertiary text-white hover:bg-quaternary transition-colors duration-300">
+                                    <i class="fas fa-th-large mr-2"></i>View All Barangays
+                                </button>
+                            </div>
                         </div>
                     `;
 
-                    // Only show recent projects if there are any from other barangays
-                    if (recentProjects.length > 0 && allProjects.some(project => project.address !== barangayName)) {
-                        projectsHTML += `
-                            <div class="border-t border-gray-200 pt-8">
-                                <h4 class="text-xl font-semibold text-tertiary mb-6 flex items-center">
-                                    <i class="fas fa-clock mr-3"></i>Recent Projects From Different Barangays
-                                </h4>
-                                <div class="space-y-8">
-                        `;
-
-                        // Add recent projects
-                        recentProjects.forEach(project => {
-                            projectsHTML += `
-                                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-300 cursor-pointer"
-                                     onclick="openProjectsModal('${project.address}')">
-                                    <div class="flex flex-col md:flex-row">
-                                        <div class="md:w-1/4 mb-4 md:mb-0 md:mr-4">
-                                            ${project.image ?
-                                                `<img src="${project.image}" alt="${project.title}" class="w-full h-32 object-cover rounded-lg">` :
-                                                `<div class="w-full h-32 flex items-center justify-center bg-quaternary/30 rounded-lg">
-                                                    <i class="fas fa-project-diagram text-3xl text-tertiary opacity-50"></i>
-                                                </div>`
-                                            }
-                                        </div>
-                                        <div class="md:w-3/4">
-                                            <div class="flex justify-between items-start mb-2">
-                                                <h5 class="text-lg font-medium text-tertiary">${project.title}</h5>
-                                                <span class="bg-tertiary/10 text-tertiary text-xs px-2 py-1 rounded-full">
-                                                    ${project.address}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center text-sm text-gray-500 mb-2">
-                                                <i class="fas fa-calendar-check mr-2"></i>${project.date}
-                                            </div>
-                                            <p class="text-sm text-gray-600 line-clamp-2">${project.description || 'No description available.'}</p>
-                                            <div class="mt-3 text-right">
-                                                <span class="text-xs text-tertiary inline-flex items-center">
-                                                    <i class="fas fa-arrow-right mr-1"></i>View All Projects from ${project.address}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-
-                        projectsHTML += `
-                                </div>
-                            </div>
-                        `;
-                    }
+                    // Don't show projects from other barangays in this modal
+                    // This ensures users only see projects from the selected barangay
                 }
 
                 // Update the modal content
@@ -795,7 +793,7 @@
                                         ${project.image ?
                                             `<img src="${project.image}" alt="${project.title}" class="w-full h-48 object-cover rounded-lg">` :
                                             `<div class="w-full h-48 flex items-center justify-center bg-quaternary/30 rounded-lg">
-                                                <i class="fas fa-project-diagram text-5xl text-tertiary opacity-50"></i>
+                                                <i class="fas fa-map-marker-alt text-5xl text-tertiary opacity-50"></i>
                                             </div>`
                                         }
                                     </div>
@@ -922,8 +920,17 @@
                             <i class="fas fa-info-circle text-4xl text-tertiary/50 mb-4"></i>
                             <p class="text-lg text-gray-600">No projects found for Barangay ${barangayName}.</p>
                             <p class="text-sm text-gray-500 mt-2">Projects will appear here once completed by the barangay chairman.</p>
+                            <div class="mt-6">
+                                <button onclick="document.getElementById('viewAllBarangays').click(); closeProjectsModal();"
+                                        class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-tertiary text-white hover:bg-quaternary transition-colors duration-300">
+                                    <i class="fas fa-th-large mr-2"></i>View All Barangays
+                                </button>
+                            </div>
                         </div>
                     `;
+
+                    // Don't show projects from other barangays in this modal
+                    // This ensures users only see projects from the selected barangay
                 }
 
                 // Update the modal content
@@ -987,23 +994,45 @@
                 // Generate barangay logo banner
                 const barangayLogosContainer = document.querySelector('.barangay-logos-container');
 
-                // Function to generate a random icon for each barangay
-                function getRandomIcon() {
-                    const icons = [
-                        'fa-landmark', 'fa-mountain', 'fa-tree', 'fa-water',
-                        'fa-sun', 'fa-seedling', 'fa-leaf', 'fa-home',
-                        'fa-church', 'fa-school', 'fa-store', 'fa-building',
-                        'fa-flag', 'fa-star', 'fa-compass', 'fa-map-marker-alt'
-                    ];
-                    return icons[Math.floor(Math.random() * icons.length)];
-                }
+                // We'll use fa-map-marker-alt as the default icon for barangays without logos
 
                 // Generate barangay logos
                 if (barangayLogosContainer) {
-                    // Shuffle the barangay list to display a random selection
-                    const shuffledBarangays = [...barangayList].sort(() => 0.5 - Math.random());
-                    // Take only the first 12 for display (or fewer if the list is shorter)
-                    const displayBarangays = shuffledBarangays.slice(0, 12);
+                    // First, identify barangays with projects
+                    const barangaysWithProjects = [];
+                    const barangaysWithoutProjects = [];
+
+                    barangayList.forEach(barangay => {
+                        // Check if this barangay has any projects
+                        const hasProjects = allProjects.some(project =>
+                            project.address.toLowerCase() === barangay.toLowerCase() ||
+                            project.address.toLowerCase().includes(barangay.toLowerCase()) ||
+                            barangay.toLowerCase().includes(project.address.toLowerCase())
+                        );
+
+                        if (hasProjects) {
+                            barangaysWithProjects.push(barangay);
+                        } else {
+                            barangaysWithoutProjects.push(barangay);
+                        }
+                    });
+
+                    // Shuffle both arrays
+                    const shuffledWithProjects = [...barangaysWithProjects].sort(() => 0.5 - Math.random());
+                    const shuffledWithoutProjects = [...barangaysWithoutProjects].sort(() => 0.5 - Math.random());
+
+                    // Prioritize showing barangays with projects, then fill remaining slots with others
+                    let displayBarangays = [];
+
+                    // Add all barangays with projects first (up to 12)
+                    displayBarangays = displayBarangays.concat(shuffledWithProjects.slice(0, 12));
+
+                    // If we have fewer than 12, add some without projects to fill up to 12
+                    if (displayBarangays.length < 12) {
+                        displayBarangays = displayBarangays.concat(
+                            shuffledWithoutProjects.slice(0, 12 - displayBarangays.length)
+                        );
+                    }
 
                     // Function to create a barangay logo item
                     function createBarangayLogoItem(barangay) {
@@ -1011,21 +1040,65 @@
                         logoItem.className = 'barangay-logo-item';
                         logoItem.setAttribute('data-barangay', barangay);
 
-                        // Check if we have projects for this barangay
+                        // Check if we have projects for this barangay - exact match for better accuracy
                         const barangayProjects = allProjects.filter(project =>
-                            project.address.toLowerCase().includes(barangay.toLowerCase())
+                            project.address.toLowerCase() === barangay.toLowerCase()
                         );
 
                         const hasProjects = barangayProjects.length > 0;
 
                         // Find the barangay logo if available
                         let logoUrl = null;
+
+                        // First try exact match
                         if (hasProjects) {
                             // Try to find a project with a chairman logo
                             for (const project of barangayProjects) {
                                 if (project.chairman_logo && project.chairman_logo.trim() !== '') {
                                     logoUrl = project.chairman_logo;
+                                    console.log(`Found logo for ${barangay}:`, logoUrl);
                                     break;
+                                }
+                            }
+                        }
+
+                        // If no exact match found, try a more flexible match
+                        if (!logoUrl) {
+                            // Try to find any project with this barangay name in the address
+                            const flexibleMatches = allProjects.filter(project =>
+                                project.address.toLowerCase().includes(barangay.toLowerCase()) ||
+                                barangay.toLowerCase().includes(project.address.toLowerCase())
+                            );
+
+                            // Look for chairman logo in these matches
+                            for (const project of flexibleMatches) {
+                                if (project.chairman_logo && project.chairman_logo.trim() !== '') {
+                                    logoUrl = project.chairman_logo;
+                                    console.log(`Found logo for ${barangay} via flexible match:`, logoUrl);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // If still no logo found, try to find any logo from the same barangay
+                        if (!logoUrl) {
+                            // Look through all projects to find any logo from the same barangay
+                            // This helps when barangay names might have slight variations
+                            for (const project of allProjects) {
+                                const projectBarangay = project.address.toLowerCase();
+                                const currentBarangay = barangay.toLowerCase();
+
+                                // Check for partial matches in either direction
+                                if (projectBarangay.includes(currentBarangay) ||
+                                    currentBarangay.includes(projectBarangay) ||
+                                    // Check for common words (e.g., "Upper Timonan" and "Lower Timonan" both contain "Timonan")
+                                    currentBarangay.split(' ').some(word => word.length > 3 && projectBarangay.includes(word))) {
+
+                                    if (project.chairman_logo && project.chairman_logo.trim() !== '') {
+                                        logoUrl = project.chairman_logo;
+                                        console.log(`Found logo for ${barangay} via word match:`, logoUrl);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -1034,17 +1107,41 @@
                         const logoContainer = document.createElement('div');
                         logoContainer.className = 'barangay-logo-image';
 
-                        // If we have a logo, use it; otherwise use an icon
+                        // If we have a logo, use it; otherwise use a location icon
                         if (logoUrl) {
                             const img = document.createElement('img');
                             img.src = logoUrl;
                             img.alt = barangay;
                             img.className = 'w-full h-full object-contain';
+                            img.loading = 'lazy'; // Add lazy loading for better performance
+
+                            // Add a subtle shadow to make the logo stand out
+                            img.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))';
+
+                            // Add a subtle zoom effect on hover
+                            img.style.transition = 'transform 0.3s ease';
+                            logoContainer.addEventListener('mouseenter', () => {
+                                img.style.transform = 'scale(1.05)';
+                            });
+                            logoContainer.addEventListener('mouseleave', () => {
+                                img.style.transform = 'scale(1)';
+                            });
+
+                            // Handle image loading errors
+                            img.onerror = function() {
+                                console.error(`Failed to load logo for ${barangay}:`, logoUrl);
+                                // Replace with default icon
+                                logoContainer.innerHTML = '';
+                                const icon = document.createElement('i');
+                                icon.className = 'fas fa-map-marker-alt barangay-logo-icon';
+                                logoContainer.appendChild(icon);
+                            };
+
                             logoContainer.appendChild(img);
                         } else {
-                            // Create a fallback icon
+                            // Create a location icon as default
                             const icon = document.createElement('i');
-                            icon.className = `fas ${getRandomIcon()} barangay-logo-icon`;
+                            icon.className = 'fas fa-map-marker-alt barangay-logo-icon';
                             logoContainer.appendChild(icon);
                         }
 
@@ -1059,20 +1156,73 @@
 
                         // Add click event for all barangays - show only recent projects when clicking on logo
                         logoItem.addEventListener('click', () => {
-                            openRecentProjectsModal(barangay);
+                            // Find the exact barangay name from projects if available
+                            const exactMatch = projectBarangays.find(projectBarangay =>
+                                projectBarangay.toLowerCase() === barangay.toLowerCase() ||
+                                projectBarangay.toLowerCase().includes(barangay.toLowerCase()) ||
+                                barangay.toLowerCase().includes(projectBarangay.toLowerCase())
+                            );
+
+                            // Use the exact match from projects if found, otherwise use the barangay name
+                            openRecentProjectsModal(exactMatch || barangay);
                         });
 
                         // Add visual indicator based on whether there are projects
                         if (hasProjects) {
-                            // Add a small indicator that it has projects
+                            // Add the has-projects class for styling
+                            logoItem.classList.add('has-projects');
+
+                            // Add a badge indicator that it has projects
                             const indicator = document.createElement('div');
-                            indicator.className = 'absolute bottom-1 right-1 w-3 h-3 bg-quaternary rounded-full';
+                            indicator.className = 'absolute -top-1 -right-1 flex items-center justify-center';
+
+                            // Create a badge with a checkmark
+                            const badge = document.createElement('div');
+                            badge.className = 'badge bg-quaternary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center';
+                            badge.innerHTML = '<i class="fas fa-check text-xs"></i>';
+                            badge.title = 'Has completed projects';
+
+                            // Add a pulsing animation to draw attention
+                            badge.style.animation = 'pulse 2s infinite';
+
+                            // Add a tooltip on hover
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'tooltip absolute bottom-full right-0 bg-tertiary text-white text-xs rounded py-1 px-2 mb-2 opacity-0 transition-opacity duration-300 pointer-events-none';
+                            tooltip.textContent = 'Click to view completed projects';
+                            tooltip.style.whiteSpace = 'nowrap';
+
+                            badge.addEventListener('mouseenter', () => {
+                                tooltip.style.opacity = '1';
+                            });
+
+                            badge.addEventListener('mouseleave', () => {
+                                tooltip.style.opacity = '0';
+                            });
+
+                            indicator.appendChild(badge);
+                            indicator.appendChild(tooltip);
                             logoItem.appendChild(indicator);
+
+                            // Add a subtle glow effect to highlight barangays with projects
+                            logoItem.style.boxShadow = '0 0 12px rgba(122, 186, 120, 0.6)';
+                            logoContainer.style.borderColor = 'rgba(10, 104, 71, 0.5)';
+                            logoContainer.style.borderWidth = '2px';
+
+                            // Add a subtle background to make it stand out
+                            logoItem.style.background = 'linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(240,255,240,0.9))';
                         } else {
                             // Still make it clickable but with a different indicator
-                            logoItem.style.opacity = '0.9';
+                            logoItem.style.opacity = '0.85';
                             const indicator = document.createElement('div');
-                            indicator.className = 'absolute bottom-1 right-1 w-3 h-3 bg-gray-300 rounded-full';
+                            indicator.className = 'absolute -top-1 -right-1 flex items-center justify-center';
+
+                            // Create a badge with an info icon
+                            const badge = document.createElement('div');
+                            badge.className = 'badge bg-gray-300 text-gray-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center';
+                            badge.innerHTML = '<i class="fas fa-info text-xs"></i>';
+                            badge.title = 'No completed projects yet';
+
+                            indicator.appendChild(badge);
                             logoItem.appendChild(indicator);
                         }
 
@@ -1091,8 +1241,29 @@
                             // Clear current logos
                             barangayLogosContainer.innerHTML = '';
 
+                            // Sort barangays - those with projects first, then alphabetically
+                            const sortedBarangays = [...barangayList].sort((a, b) => {
+                                // Check if barangay has projects
+                                const aHasProjects = allProjects.some(project =>
+                                    project.address.toLowerCase() === a.toLowerCase() ||
+                                    project.address.toLowerCase().includes(a.toLowerCase()) ||
+                                    a.toLowerCase().includes(project.address.toLowerCase())
+                                );
+
+                                const bHasProjects = allProjects.some(project =>
+                                    project.address.toLowerCase() === b.toLowerCase() ||
+                                    project.address.toLowerCase().includes(b.toLowerCase()) ||
+                                    b.toLowerCase().includes(project.address.toLowerCase())
+                                );
+
+                                // Sort by projects first, then alphabetically
+                                if (aHasProjects && !bHasProjects) return -1;
+                                if (!aHasProjects && bHasProjects) return 1;
+                                return a.localeCompare(b); // Alphabetical if both have or don't have projects
+                            });
+
                             // Add all barangays
-                            barangayList.forEach(barangay => {
+                            sortedBarangays.forEach(barangay => {
                                 barangayLogosContainer.appendChild(createBarangayLogoItem(barangay));
                             });
 
